@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Port Papers Filler</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#0b5f8f">
+<style>
+/* Layout idea: a ship's document folder. One narrow working column, two steps
+   (ship table, then form), hull-grey surfaces with a chart-blue accent. */
+:root{
+  --bg:#eef1f3; --surface:#ffffff; --ink:#14232e; --muted:#5a6b78; --line:#cdd6dc;
+  --accent:#0b5f8f; --accent-ink:#ffffff; --warn:#a85b00; --warn-bg:#fff3dc; --ok:#1c6b45; --ok-bg:#e2f3ea;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f181f; --surface:#17232c; --ink:#e4ecf1; --muted:#94a6b3; --line:#2c3c48;
+    --accent:#5fb2e0; --accent-ink:#06202f; --warn:#f0b35a; --warn-bg:#3a2a10; --ok:#7fd1a5; --ok-bg:#143326;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f181f; --surface:#17232c; --ink:#e4ecf1; --muted:#94a6b3; --line:#2c3c48;
+  --accent:#5fb2e0; --accent-ink:#06202f; --warn:#f0b35a; --warn-bg:#3a2a10; --ok:#7fd1a5; --ok-bg:#143326;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body)}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px 64px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:20px 0 12px}
+h1{font:600 30px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;margin:0}
+h2{font:600 19px/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;margin:0;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted)}
+.pill{white-space:nowrap;font:500 12px/1 var(--body);padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.pill.ok{color:var(--ok);background:var(--ok-bg);border-color:transparent}
+.pill.warn{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+nav.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin-bottom:20px}
+nav.tabs a{flex:1;text-align:center;padding:10px 8px;font:600 17px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px}
+nav.tabs a[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+section.view{display:flex;flex-direction:column;gap:18px}
+section.view[hidden]{display:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px}
+details.card{display:block}
+details.card > summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0;cursor:pointer;list-style:none}
+details.card > summary::-webkit-details-marker{display:none}
+details.card > summary h2::before{content:"+ ";color:var(--accent)}
+details.card[open] > summary h2::before{content:"\2212 "}
+details.card[open] > summary{margin-bottom:12px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table.grid{border-collapse:collapse;font-size:13px}
+table.grid th{font:500 12px/1.2 var(--body);color:var(--muted);text-align:left;padding:7px 6px;white-space:nowrap;background:var(--bg)}
+table.grid td{padding:3px;border-top:1px solid var(--line);vertical-align:middle}
+table.grid td.num{color:var(--muted);padding:0 8px;font-family:var(--mono)}
+table.grid td.fixed{min-width:190px;max-width:230px;padding:6px 8px;font-weight:500}
+table.grid input[type=text]{min-width:118px;padding:6px 7px;font-size:13px}
+.tablenote{grid-column:2 / -1;color:var(--muted);font-size:13px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px 16px}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field label{font-size:12.5px;color:var(--muted)}
+.field .rowx{display:flex;gap:6px}
+input[type=text],select{width:100%;min-width:0;font:400 14px/1.3 var(--mono);color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:4px;padding:8px 9px}
+select{font-family:var(--body)}
+input[type=text]:focus,select:focus,button:focus-visible,a:focus-visible,.drop:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+button{font:500 14px/1 var(--body);padding:10px 14px;border-radius:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button.small{padding:6px 9px;font-size:12.5px}
+button:disabled{opacity:.5;cursor:default}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:4px;padding:9px 12px;font-size:13.5px}
+.drop{border:2px dashed var(--line);border-radius:6px;padding:26px 16px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;background:var(--surface)}
+.drop.over{border-color:var(--accent)}
+.drop input{max-width:100%}
+ol.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;max-width:65ch}
+.slot{display:grid;grid-template-columns:22px minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr);gap:8px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.slot:first-child{border-top:0}
+.slot .lab{min-width:0;overflow-wrap:anywhere}
+.slot .lab b{font-weight:600}
+.slot .lab small{display:block;color:var(--muted);font:400 11.5px/1.3 var(--mono)}
+.slot .lab small.tight{color:var(--warn);font-family:var(--body)}
+.slot input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.slot.empty input[type=text]{border-color:var(--warn)}
+@media (max-width:620px){
+  .slot{grid-template-columns:22px minmax(0,1fr)}
+  .slot select,.slot input[type=text]{grid-column:2}
+}
+details summary{cursor:pointer;font-weight:500;padding:6px 0}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:4px;
+  font-size:13.5px;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Port Papers Filler</h1>
+    <span id="saveState" class="pill">Loading</span>
+  </header>
+
+  <nav class="tabs">
+    <a href="#ship" id="tab-ship">1. Ship particulars</a>
+    <a href="#fill" id="tab-fill">2. Fill a form</a>
+  </nav>
+
+  <!-- STEP 1: the common table. Its rows are built by renderShip() in the script. -->
+  <section class="view" id="view-ship">
+    <p class="muted" style="max-width:65ch">Enter each detail once. Every port form you upload in step 2 is filled from these sections. Tap a section to open it. Voyage details, bunkers and the ports list change at each port, so update those before each call.</p>
+    <div id="exampleNote" class="note" hidden>Example data is loaded so you can try a form. Replace it with your ship's details.</div>
+    <div id="shipGroups" style="display:flex;flex-direction:column;gap:18px"></div>
+    <div class="card">
+      <h2>Add your own field</h2>
+      <p class="muted">For anything a port asks that is not listed above, such as a certificate number.</p>
+      <div class="bar">
+        <input type="text" id="newFieldLabel" placeholder="Field name, e.g. IOPP certificate expiry" style="flex:1;min-width:200px;font-family:var(--body)">
+        <button id="addFieldBtn">Add field</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Backup</h2>
+      <p class="muted">Your data is stored on this device only. Save a backup file now and then, and use it to move your data to another phone or laptop.</p>
+      <div class="bar">
+        <button id="exportBtn">Save backup file</button>
+        <label class="bar" style="gap:6px"><span class="muted">Restore from backup:</span><input type="file" id="importFile" accept=".json,application/json"></label>
+        <button id="exampleBtn">Load example ship</button>
+        <button id="clearBtn">Clear all values and lists</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: upload a form, review what was found, download the filled copy. -->
+  <section class="view" id="view-fill" hidden>
+    <div class="drop" id="drop">
+      <h2>Upload a port form</h2>
+      <p class="muted">Excel (.xlsx), Word (.docx) or PDF. The file is read on this device.</p>
+      <input type="file" id="formFile" accept=".xlsx,.xlsm,.docx,.pdf">
+    </div>
+    <div class="card" id="howCard">
+      <h2>What happens</h2>
+      <ol class="steps">
+        <li>The form is scanned for labels with a blank beside or below them, such as <b>Name of ship</b>, <b>IMO No.</b> or <b>Last port of call</b>.</li>
+        <li>Each label is matched to a row of your ship table. You check the matches and correct any that are wrong. Corrections are remembered for the next form.</li>
+        <li>You download the same file with the blanks filled. Layout, logos and borders stay as the port sent them.</li>
+      </ol>
+      <p class="muted" style="max-width:65ch">Scanned PDFs (photos of paper) and old .doc / .xls files cannot be read. Open old files in Word or Excel and save them as .docx / .xlsx first.</p>
+    </div>
+    <div class="card" id="reviewCard" hidden>
+      <div class="bar" style="justify-content:space-between">
+        <h2 id="reviewTitle">Review</h2>
+        <span id="reviewStat" class="pill"></span>
+      </div>
+      <p id="reviewMsg" class="muted"></p>
+      <div id="slotList"></div>
+      <details id="otherBox" hidden>
+        <summary id="otherSum"></summary>
+        <p class="muted" style="margin-bottom:6px">These labels were not recognised. Pick a field for any that should be filled, or type a value directly.</p>
+        <div id="otherList"></div>
+      </details>
+      <div class="bar">
+        <button class="primary" id="downloadBtn">Download filled form</button>
+        <button id="aiBtn" hidden>Match the rest with Claude</button>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="toast" role="status"></div>
+
+<!-- Two libraries do the file work: JSZip opens .xlsx/.docx (both are zip files of XML),
+     pdf-lib writes into PDFs. pdf.js (for reading PDF text) is loaded later, only when a PDF arrives. -->
+<script src="jszip.min.js"></script>
+<script src="pdf-lib.min.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   PART 1. THE FIELD CATALOGUE
+   Each entry: [group, key, label shown in the table, other wordings ports use].
+   The "other wordings" are how a label on a form gets recognised.
+   ===================================================================== */
+const CATALOGUE = [
+  ["Identity","vessel_name","Name of ship",["ship name","vessel","mv","name of the ship"]],
+  ["Identity","imo_number","IMO number",["imo","imo no"]],
+  ["Identity","call_sign","Call sign",["callsign","call letters"]],
+  ["Identity","mmsi","MMSI",["mmsi no"]],
+  ["Identity","flag","Flag",["flag state","flag state of ship","nationality of ship","flag of ship","country of registry"]],
+  ["Identity","port_of_registry","Port of registry",["home port","port of registration","registry port"]],
+  ["Identity","official_number","Official number",["official no","registration no","register no"]],
+  ["Identity","vessel_type","Type of ship",["ship type","type"]],
+  ["Identity","year_built","Year built",["built","year of build","date of build","date built","year of construction","delivery date"]],
+  ["Identity","builder","Builder / shipyard",["builder","builders","shipyard","built by","place of build","where built"]],
+  ["Identity","class_society","Classification society",["class","class society"]],
+
+  ["Tonnage and dimensions","gross_tonnage","Gross tonnage (GT)",["gt","grt","gross tonnage","gross registered tonnage","gross"]],
+  ["Tonnage and dimensions","net_tonnage","Net tonnage (NT)",["nt","nrt","net tonnage","net registered tonnage","net"]],
+  ["Tonnage and dimensions","deadweight","Deadweight (DWT)",["dwt","deadweight","summer deadweight","summer dwt","deadweight tonnage"]],
+  ["Tonnage and dimensions","loa","Length overall (LOA)",["loa","length overall","overall length","length"]],
+  ["Tonnage and dimensions","lbp","Length between perpendiculars (LBP)",["lbp","length between perpendiculars","length bp"]],
+  ["Tonnage and dimensions","breadth","Breadth (moulded)",["breadth","beam","extreme breadth","moulded breadth"]],
+  ["Tonnage and dimensions","depth","Depth (moulded)",["depth","moulded depth"]],
+  ["Tonnage and dimensions","summer_draft","Summer draft",["summer draft","maximum draft","max draft","summer load draft"]],
+  ["Tonnage and dimensions","main_engine","Main engine",["main engine","engine type","main engine type","engine maker"]],
+  ["Tonnage and dimensions","engine_power","Engine power",["power","bhp","kw","engine power","main engine power","mcr"]],
+  ["Tonnage and dimensions","service_speed","Service speed",["speed","service speed"]],
+
+  ["Owners and managers","owner","Registered owner",["owner","owners","name of owner","ship owner"]],
+  ["Owners and managers","owner_address","Owner's address",["address of owner","owners address","registered owner address"]],
+  ["Owners and managers","manager","Manager / operator",["manager","managers","operator","operators","ship manager","technical manager","management company"]],
+  ["Owners and managers","manager_address","Manager's address",["address of manager","managers address","operator address","address of operator"]],
+  ["Owners and managers","p_and_i","P&I club",["p i club","p i","pandi club"]],
+  ["Owners and managers","ship_email","Ship e-mail",["email","email address","ship email"]],
+  ["Owners and managers","ship_phone","Ship phone / Inmarsat",["phone","inmarsat","satellite phone","sat phone","ship phone"]],
+
+  ["Security (ISPS)","security_level","Security level",["current security level","ship security level"]],
+  ["Security (ISPS)","cso_name","Company security officer",["cso","cso name","name of cso"]],
+  ["Security (ISPS)","cso_contact","CSO 24-hour contact",["cso phone","cso contact","cso contact details"]],
+
+  ["Master and crew","master_name","Name of master",["master","master name","name of captain"]],
+  ["Master and crew","crew_total","Number of crew",["crew","total crew","crew on board","number of crew including master"]],
+  ["Master and crew","passengers","Number of passengers",["passengers","passengers on board"]],
+
+  ["Voyage (update at each port)","voyage_number","Voyage number",["voyage","voy","voyage no"]],
+  ["Voyage (update at each port)","port_of_call","Port of arrival / departure",["port of arrival","port of departure","port of call","port"]],
+  ["Voyage (update at each port)","arrival_date","Date and time of arrival",["date of arrival","eta","arrival date","time of arrival","date time of arrival","date time of arrival departure","arrival"]],
+  ["Voyage (update at each port)","departure_date","Date and time of departure",["date of departure","etd","departure date","date time of departure","departure"]],
+  ["Voyage (update at each port)","last_port","Last port of call",["last port","previous port","port arrived from","arrived from","coming from"]],
+  ["Voyage (update at each port)","next_port","Next port of call",["next port","destination","bound for","port of destination"]],
+  ["Voyage (update at each port)","berth","Berth / position in port",["berth","position of ship in port","terminal"]],
+  ["Voyage (update at each port)","agent","Ship's agent",["agent","agents","ship agent","local agent","name of agent","agency","name contact details of ship agent"]],
+  ["Cargo","cargo","Cargo on board",["cargo","brief description of cargo","description of cargo","nature of cargo","type of cargo"]],
+  ["Cargo","cargo_quantity","Cargo quantity",["quantity","quantity of cargo","cargo qty"]],
+  ["Voyage (update at each port)","draft_fwd","Arrival draft forward",["draft fwd","draft forward","forward draft","fwd draft","fwd"]],
+  ["Voyage (update at each port)","draft_aft","Arrival draft aft",["draft aft","aft draft","aft"]],
+  ["Voyage (update at each port)","purpose_of_call","Purpose of call",["purpose","reason for call"]],
+  ["Voyage (update at each port)","last_port_departure","Departure date from last port",["date of departure from last port","last port departure","sailed from last port"]],
+  ["Voyage (update at each port)","next_port_eta","ETA at next port",["eta next port","next port eta"]],
+  ["Voyage (update at each port)","pilot_eta","ETA pilot station",["eta pilot boarding ground","eta pbg","eta pilot"]],
+  ["Voyage (update at each port)","persons_on_board","Total persons on board",["pob","persons on board","total on board","souls on board"]],
+  ["Voyage (update at each port)","max_arrival_draft","Maximum arrival draft",["max arrival draft","arrival draft","deepest draft","maximum draft on arrival"]],
+  ["Voyage (update at each port)","dep_draft_fwd","Departure draft forward",["departure draft fwd","sailing draft forward"]],
+  ["Voyage (update at each port)","dep_draft_aft","Departure draft aft",["sailing draft aft"]],
+  ["Voyage (update at each port)","air_draft","Air draft",["max air draft","air draft on arrival","height above waterline"]],
+  ["Voyage (update at each port)","arrival_displacement","Arrival displacement",["displacement on arrival"]],
+  ["Voyage (update at each port)","freeboard","Freeboard on arrival",["freeboard","arrival freeboard"]],
+  ["Voyage (update at each port)","cargo_operation","Cargo operation at this port",["cargo operation","operation","loading discharging","type of operation"]],
+  ["Voyage (update at each port)","cargo_to_handle","Quantity to load / discharge",["quantity to discharge","quantity to load","cargo to be discharged","cargo to be loaded"]],
+  ["Voyage (update at each port)","dg_on_board","Dangerous goods on board",["dangerous goods","dangerous cargo on board","hazardous cargo","imdg cargo on board"]],
+  ["Voyage (update at each port)","defects","Defects / deficiencies",["defects","deficiencies","any defects","defects affecting safety"]],
+  ["Voyage (update at each port)","voyage_particulars","Brief particulars of voyage",["particulars of voyage","previous subsequent ports of call"]],
+  ["Voyage (update at each port)","remarks","Remarks",["remarks","other information","additional information"]],
+
+  ["Bunkers, water and waste","rob_fo","Fuel oil on board (ROB)",["fuel oil rob","hfo rob","vlsfo rob","fo rob","fuel oil on board","fuel oil remaining on board","bunkers fuel oil"]],
+  ["Bunkers, water and waste","rob_do","Diesel / gas oil on board (ROB)",["mgo rob","mdo rob","do rob","diesel oil on board","gas oil on board","diesel oil rob"]],
+  ["Bunkers, water and waste","rob_lo","Lube oil on board",["lub oil on board","lo rob","lubricating oil rob"]],
+  ["Bunkers, water and waste","rob_fw","Fresh water on board",["fw rob","fresh water rob","fresh water"]],
+  ["Bunkers, water and waste","ballast_on_board","Ballast water on board",["ballast on board","ballast quantity","ballast water","ballast rob"]],
+  ["Bunkers, water and waste","ballast_method","Ballast water management method",["bwts","ballast water treatment system","ballast exchange method"]],
+  ["Bunkers, water and waste","slops_on_board","Slops on board",["slop quantity","slops rob","slops"]],
+  ["Bunkers, water and waste","sludge_on_board","Sludge on board",["sludge rob","oily sludge","sludge quantity","sludge"]],
+  ["Bunkers, water and waste","bilge_on_board","Oily bilge water on board",["bilge water rob","oily bilge water","bilge water"]],
+  ["Bunkers, water and waste","garbage_on_board","Garbage on board",["garbage quantity","garbage rob","garbage"]],
+  ["Bunkers, water and waste","sewage_on_board","Sewage on board",["sewage quantity","sewage"]],
+  ["Bunkers, water and waste","last_waste_port","Last port where waste was delivered",["last port of waste delivery","last waste delivery port","port of last delivery of waste"]],
+  ["Bunkers, water and waste","last_waste_date","Date of last waste delivery",["last waste delivery date","date waste last delivered"]],
+  ["Bunkers, water and waste","waste_to_deliver","Waste to be delivered at this port",["waste to be delivered","waste for reception facilities","requirements for waste reception facilities"]],
+
+  ["Owners and managers","company_imo","Company IMO number",["imo company no","company identification no","company imo"]],
+  ["Owners and managers","owner_imo","Registered owner IMO number",["owner imo no","registered owner identification no"]],
+  ["Owners and managers","doc_company","ISM company (DOC holder)",["ism company","doc holder","company name ism","name of company"]],
+  ["Owners and managers","charterer","Charterer",["charterers","time charterer","voyage charterer"]],
+
+  ["Master and crew","crew_nationalities","Crew nationalities",["nationality of crew","nationalities of crew"]],
+  ["Master and crew","ship_cash","Ship's cash on board (currency declaration)",["ship cash","cash on board","master cash","currency on board","ship currency"]],
+
+  ["Security (ISPS)","issc_type","ISSC type (full / interim)",["full or interim issc","interim issc","type of issc"]],
+  ["Security (ISPS)","valid_issc","Valid ISSC on board (yes / no)",["valid issc","does ship have valid issc","valid issc on board"]],
+  ["Security (ISPS)","ssp_on_board","Approved security plan on board (yes / no)",["approved ssp on board","ship security plan on board","approved ship security plan"]],
+  ["Security (ISPS)","sso_name","Ship security officer",["sso","sso name","name of sso"]],
+  ["Security (ISPS)","cso_email","CSO e-mail",["cso email address"]],
+  ["Security (ISPS)","position_at_report","Ship's position at time of report",["position at time of report","present position","location of ship","position of ship"]],
+  ["Security (ISPS)","sts_activities","Ship-to-ship activities during last 10 port calls",["ship to ship activities","sts activities","sts operations last 10 ports"]],
+  ["Security (ISPS)","special_measures","Special or additional security measures taken",["special security measures","additional security measures","special additional security measures"]],
+  ["Security (ISPS)","security_matters","Other security-related matters to report",["security related matters","other security information","other security related information"]],
+
+  ["Cargo","load_port","Port of loading",["loading port","loaded at","load port"]],
+  ["Cargo","discharge_port","Port of discharge",["discharging port","discharge port","port of discharging"]],
+  ["Cargo","shipper","Shipper",["shippers","name of shipper"]],
+  ["Cargo","consignee","Consignee",["consignees","receiver","receivers","name of consignee"]],
+  ["Cargo","notify_party","Notify party",["notify","notify address"]],
+  ["Cargo","bl_number","Bill of lading number",["b l no","bl no","bill of lading","b l number"]],
+  ["Cargo","bl_date","Bill of lading date",["b l date","bl date","date of bill of lading"]],
+  ["Cargo","un_number","UN number",["un no","unno"]],
+  ["Cargo","imo_class","IMO hazard class",["imo class","imdg class","hazard class","class of cargo"]],
+  ["Cargo","marpol_category","MARPOL pollution category",["pollution category","marpol category","marpol annex ii category"]],
+  ["Cargo","flashpoint","Flashpoint",["flash point","flashpoint of cargo"]],
+  ["Cargo","cargo_temp","Cargo temperature",["temperature","loading temperature","cargo temp"]],
+  ["Cargo","cargo_density","Cargo density / API",["api","density","specific gravity","density at 15"]],
+  ["Cargo","cargo_tanks_used","Cargo tanks loaded",["tanks loaded","stowage","cargo stowage"]],
+  ["Cargo","last_cargoes","Last three cargoes",["last 3 cargoes","previous cargoes","last cargo","previous cargo"]],
+
+  ["Terminal information (tanker)","manifold_no","Number of cargo manifolds",["manifolds","cargo manifolds","manifold connections"]],
+  ["Terminal information (tanker)","manifold_size","Manifold size / flange",["manifold size","manifold diameter","flange size","size of manifold","reducers"]],
+  ["Terminal information (tanker)","manifold_height_deck","Manifold height above deck",["height of manifold above deck"]],
+  ["Terminal information (tanker)","manifold_height_wl","Manifold height above waterline",["height of manifold above waterline","manifold above water","manifold height above water"]],
+  ["Terminal information (tanker)","manifold_to_side","Distance manifold to ship's side",["manifold to ship side","distance from ship side to manifold","manifold to rail"]],
+  ["Terminal information (tanker)","bcm","Bow to centre manifold (BCM)",["bcm","bow to center manifold","bow to manifold"]],
+  ["Terminal information (tanker)","scm","Stern to centre manifold (SCM)",["scm","stern to center manifold","stern to manifold"]],
+  ["Terminal information (tanker)","parallel_body","Parallel body length",["pbl","parallel mid body","parallel body length loaded","parallel body"]],
+  ["Terminal information (tanker)","cargo_tanks_no","Number of cargo tanks",["cargo tanks","cargo tanks total"]],
+  ["Terminal information (tanker)","cargo_capacity","Cargo tank capacity (98%)",["cargo capacity","total cargo capacity","cubic capacity 98","cargo tank capacity"]],
+  ["Terminal information (tanker)","slop_capacity","Slop tank capacity",["slop tanks capacity","slop capacity"]],
+  ["Terminal information (tanker)","sbt_capacity","Segregated ballast capacity",["sbt capacity","ballast capacity","ballast tank capacity"]],
+  ["Terminal information (tanker)","cargo_pumps","Cargo pumps (number x capacity)",["cargo pumps","cargo pump capacity","pumps"]],
+  ["Terminal information (tanker)","max_load_rate","Maximum loading rate",["max loading rate","loading rate","maximum load rate"]],
+  ["Terminal information (tanker)","max_disch_rate","Maximum discharge rate",["discharge rate","max discharging rate","discharging rate"]],
+  ["Terminal information (tanker)","max_manifold_pressure","Maximum manifold pressure",["manifold pressure","max pressure at manifold","discharge pressure"]],
+  ["Terminal information (tanker)","igs","Inert gas system (yes / no)",["igs","inert gas","inerted"]],
+  ["Terminal information (tanker)","tank_o2","Oxygen content of cargo tanks",["o2 content","oxygen content","tank oxygen"]],
+  ["Terminal information (tanker)","cow","Crude oil washing (yes / no)",["cow","crude oil washing"]],
+  ["Terminal information (tanker)","vapour_return","Vapour return line size",["vapour return","vapor return","vapour return manifold","vrl"]],
+  ["Terminal information (tanker)","tank_coating","Cargo tank coating",["tank coating","coating"]],
+  ["Terminal information (tanker)","hose_crane_swl","Hose crane SWL",["crane swl","derrick swl","hose handling crane","hose crane"]],
+  ["Terminal information (tanker)","gangway","Gangway / accommodation ladder",["gangway","accommodation ladder","ship gangway"]],
+  ["Terminal information (tanker)","tpc","TPC at summer draft",["tpc","tonnes per centimetre"]],
+  ["Terminal information (tanker)","keel_to_mast","Keel to masthead height (KTM)",["ktm","keel to mast","keel to top of mast","height keel to mast"]],
+  ["Terminal information (tanker)","summer_displacement","Summer displacement",["displacement","displacement summer"]],
+  ["Terminal information (tanker)","lightship","Lightship weight",["light ship","lightweight","lightship"]],
+  ["Terminal information (tanker)","hull_type","Hull type (double hull)",["double hull","hull type","double bottom"]],
+  ["Terminal information (tanker)","deballast_time","Deballasting time",["deballasting time","time to deballast","ballasting time"]],
+
+  ["Mooring equipment","moor_winches_no","Number of mooring winches",["mooring winches","winches","winches total"]],
+  ["Mooring equipment","moor_winch_type","Mooring winch type",["winch type","type of winches","type of mooring winch"]],
+  ["Mooring equipment","moor_winch_brake","Winch brake holding capacity",["brake holding capacity","bhc","brake capacity","winch brake","brake holding load"]],
+  ["Mooring equipment","moor_winch_pull","Winch pulling force",["winch pull","hauling load","heaving capacity","winch capacity"]],
+  ["Mooring equipment","moor_ropes_no","Number of mooring ropes",["mooring ropes","mooring lines","ropes","lines total"]],
+  ["Mooring equipment","moor_rope_material","Mooring rope material / type",["rope material","type of rope","rope type","mooring line material","type of mooring lines","line type"]],
+  ["Mooring equipment","moor_rope_dia","Mooring rope diameter",["rope diameter","line diameter","rope size","mooring line diameter"]],
+  ["Mooring equipment","moor_rope_length","Mooring rope length",["rope length","line length","mooring line length"]],
+  ["Mooring equipment","moor_rope_mbl","Mooring rope MBL",["mbl","minimum breaking load","breaking strength","line mbl","ldbf","rope mbl"]],
+  ["Mooring equipment","sdmbl","Ship design MBL (SDMBL)",["ship design mbl","sdmbl"]],
+  ["Mooring equipment","moor_wires_no","Number of mooring wires",["mooring wires","wires"]],
+  ["Mooring equipment","moor_wire_details","Mooring wire diameter / length / MBL",["wire diameter","wire mbl","wire details"]],
+  ["Mooring equipment","moor_tails","Mooring tails (number, material, length, MBL)",["tails","mooring tails","pennants","tail mbl"]],
+  ["Mooring equipment","moor_fwd","Mooring lines available forward",["lines forward","forward mooring lines","fwd lines","lines fwd"]],
+  ["Mooring equipment","moor_aft","Mooring lines available aft",["lines aft","aft mooring lines","stern lines"]],
+  ["Mooring equipment","fire_wires","Emergency towing-off pennants (fire wires)",["fire wires","etop","emergency towing pennants"]],
+  ["Mooring equipment","anchor_details","Anchors (type / weight)",["anchor weight","anchor type","anchors"]],
+  ["Mooring equipment","anchor_chain_port","Port anchor chain (shackles)",["port anchor shackles","port anchor cable","port chain length"]],
+  ["Mooring equipment","anchor_chain_stbd","Starboard anchor chain (shackles)",["starboard anchor shackles","stbd anchor cable","starboard chain length"]],
+  ["Mooring equipment","bow_thruster","Bow thruster (power)",["bow thruster","thruster","bow thruster power"]],
+  ["Mooring equipment","bitts_swl","SWL of bitts / chocks",["swl bitts","swl chocks","swl of mooring fittings","bollards swl"]],
+
+  ["Health declaration","affected_area_visit","Visited an affected area (yes / no)",["visited affected area","ship visited affected area"]],
+  ["Health declaration","affected_area_details","Affected area: port and date of visit",["port date of visit affected area"]],
+  ["Health declaration","health_death","Death on board other than by accident (yes / no)",["person died on board","died on board otherwise than accident","deaths on board"]],
+  ["Health declaration","health_infectious","Suspected infectious disease on board (yes / no)",["case of disease suspected infectious","infectious disease on board","suspected infectious disease"]],
+  ["Health declaration","health_ill_now","Ill person on board now (yes / no)",["ill person on board now","sick persons on board","ill persons on board"]],
+  ["Health declaration","ill_count","Number of ill persons",["total ill persons","ill persons total"]],
+  ["Health declaration","deaths_count","Number of deaths",["total deaths"]],
+  ["Health declaration","health_doctor_consulted","Medical practitioner consulted (yes / no)",["medical practitioner consulted","doctor consulted"]],
+  ["Health declaration","health_condition","Condition on board that may spread disease (yes / no)",["condition which may lead to infection","condition spread of disease"]],
+  ["Health declaration","health_sanitary","Sanitary measures applied on board (yes / no)",["sanitary measure applied","quarantine isolation disinfection decontamination"]],
+  ["Health declaration","health_sick_animal","Sick animal or pet on board (yes / no)",["sick animal on board","sick animal pet"]],
+  ["Health declaration","reinspection","Re-inspection required (yes / no)",["re inspection required","reinspection required"]],
+  ["Health declaration","free_pratique","Free pratique requested",["free pratique","radio pratique","pratique"]],
+  ["Health declaration","medical_officer","Ship's medical officer",["ship doctor","ship surgeon","medical officer"]],
+
+  ["Nil list declarations","stowaways","Stowaways",["stowaways on board","stowaways found on board"]],
+  ["Nil list declarations","nil_arms","Arms and ammunition",["firearms","arms ammunition","weapons","arms"]],
+  ["Nil list declarations","nil_narcotics","Narcotics and drugs",["narcotics","drugs","narcotic drugs","narcotics other than medical chest"]],
+  ["Nil list declarations","nil_explosives","Explosives",["explosives on board"]],
+  ["Nil list declarations","nil_animals","Animals / pets",["live animals","pets","animals on board","livestock"]],
+  ["Nil list declarations","nil_plants","Plants / seeds",["plants","seeds","plants on board"]],
+  ["Nil list declarations","nil_mail","Mail and parcels",["mail","parcels","postal items"]],
+  ["Nil list declarations","nil_unmanifested","Unmanifested cargo",["undeclared cargo","unmanifested goods"]],
+  ["Nil list declarations","nil_precious","Gold / precious metals",["gold","precious metals","bullion"]],
+  ["Nil list declarations","nil_bonded","Bonded goods outside the bonded store",["bonded goods","goods not in bonded store"]],
+];
+
+/* Statutory and trading certificates. Each gives five fields: number, issued by,
+   date of issue, expiry, last survey. "must" = a word a form label needs before it can
+   match this certificate, which stops a bare "Expiry date" landing on the wrong one. */
+const CERTS = [
+  ["registry","Certificate of Registry",["registry certificate","certificate of registry port date number"],["registry"]],
+  ["tonnage","International Tonnage Certificate (1969)",["tonnage certificate","itc 69"],["tonnage","itc"]],
+  ["loadline","International Load Line Certificate",["load line certificate","loadline certificate","ill certificate"],["load","loadline","ill"]],
+  ["safcon","Cargo Ship Safety Construction Certificate",["safety construction certificate","safcon"],["construction","safcon"]],
+  ["seq","Cargo Ship Safety Equipment Certificate",["safety equipment certificate","seq"],["equipment","seq"]],
+  ["radio","Cargo Ship Safety Radio Certificate",["safety radio certificate","srt"],["radio","srt"]],
+  ["iopp","IOPP Certificate",["international oil pollution prevention certificate","iopp"],["iopp","oil"]],
+  ["iapp","IAPP Certificate",["international air pollution prevention certificate","iapp"],["iapp","air"]],
+  ["ispp","ISPP Certificate (sewage)",["international sewage pollution prevention certificate","ispp","sewage certificate"],["ispp","sewage"]],
+  ["ieec","International Energy Efficiency Certificate",["iee certificate","ieec"],["iee","ieec","energy"]],
+  ["afs","Anti-Fouling System Certificate",["afs certificate","iafs","anti fouling certificate"],["afs","iafs","fouling"]],
+  ["bwm","Ballast Water Management Certificate",["bwm certificate","ibwmc"],["bwm","ibwmc","ballast"]],
+  ["cof","Certificate of Fitness (chemicals / NLS)",["certificate of fitness","cof","nls certificate","ibc certificate of fitness"],["fitness","cof","nls"]],
+  ["smc","Safety Management Certificate (SMC)",["smc","safety management certificate"],["smc","management"]],
+  ["doc","Document of Compliance (DOC)",["doc","document of compliance","ism doc"],["doc","compliance"]],
+  ["issc","International Ship Security Certificate (ISSC)",["issc","ship security certificate"],["issc","security"]],
+  ["mlc","Maritime Labour Certificate (MLC)",["mlc","maritime labour certificate","maritime labor certificate"],["mlc","labour","labor"]],
+  ["manning","Minimum Safe Manning Document",["safe manning certificate","msmd","safe manning"],["manning","msmd"]],
+  ["class","Certificate of Class",["class certificate","classification certificate"],["class","classification"]],
+  ["clc","CLC Certificate (oil pollution liability)",["clc","civil liability certificate","civil liability oil pollution damage"],["clc","civil","liability"]],
+  ["bunker_clc","Bunker Convention Certificate",["bunker clc","bunker oil pollution liability certificate","bunkers convention"],["bunker","bunkers"]],
+  ["wreck","Wreck Removal Certificate (Nairobi)",["wreck removal certificate","nairobi convention certificate","wrc"],["wreck","nairobi","wrc"]],
+  ["pandi","P&I Certificate of Entry",["p i certificate","certificate of entry","p i insurance","p i cover"],["entry","p","pandi"]],
+  ["hm","Hull and Machinery insurance",["h m insurance","hull machinery"],["hull","h"]],
+  ["sscec","Ship Sanitation Control Exemption Certificate",["sscec","ship sanitation certificate","sanitation control certificate","deratting exemption certificate"],["sanitation","sscec","deratting"]],
+  ["csr","Continuous Synopsis Record (CSR)",["csr","continuous synopsis record"],["csr","synopsis"]],
+  ["radio_licence","Ship Radio Station Licence",["radio licence","radio station license","ship station licence"],["licence","license"]],
+  ["ihm","Inventory of Hazardous Materials (IHM)",["ihm","ihm statement of compliance","inventory of hazardous materials certificate"],["ihm","inventory"]],
+  ["dg_doc","Document of Compliance for Dangerous Goods",["dangerous goods document of compliance","doc dangerous goods"],["dangerous"]],
+  ["mrv","EU MRV Document of Compliance",["eu mrv","mrv doc"],["mrv"]],
+  ["dcs","IMO DCS / CII Statement of Compliance",["imo dcs statement of compliance","cii statement","fuel consumption statement of compliance"],["dcs","cii","consumption"]],
+].map(([id,name,syn,must]) => ({id,name,syn,must}));
+const CERT_ATTRS = [
+  {key:"number", label:"number", say:["","certificate","certificate no"]},
+  {key:"issued_by", label:"issued by", say:["issued by","issuing authority","authority","issued at","place of issue","issuer"]},
+  {key:"issue_date", label:"date of issue", say:["date of issue","issue date","issued","issued on"]},
+  {key:"expiry", label:"expiry date", say:["expiry","expiry date","date of expiry","valid until","validity","valid till","expires"]},
+  {key:"last_survey", label:"last survey", say:["last survey","last annual survey","last endorsement","annual endorsement"]},
+];
+
+/* Lists: data with many rows (crew, ports, cargo parcels). Each column has the wordings
+   that forms use for its title. "calc" columns are built from other columns
+   (a form with one Name column gets family name + given names).
+   min = how many column titles must be recognised before a table on a form counts as this list. */
+const col = (key, label, syn, extra) => Object.assign({key, label, syn: syn || []}, extra || {});
+const fullName = e => [e.family, e.given].filter(Boolean).join(" ");
+const PERSON_COLS = [
+  col("family","Family name",["surname","last name"]), col("given","Given names",["first name","given name","forename","first names"]),
+  col("name","Name",["full name","name of crew","crew name","name of seafarer","family name given names","surname given names","name of passenger","names"],{calc:fullName, into:"family"}),
+];
+const LISTS = [
+  {key:"ports", title:"Last 10 ports of call", min:3, start:10, max:10, hint:/port/i,
+   note:"Row 1 is the most recent port. Used by ISPS and pre-arrival security forms and the health declaration.",
+   cols:[col("no","No."), col("port","Port",["port name","name of port","port of call","ports"]), col("country","Country"),
+     col("facility","Port facility",["port facility name","facility","terminal","berth"]),
+     col("arrival","Date of arrival",["arrival","arrival date","arrived","date from","from"],{date:true}),
+     col("departure","Date of departure",["departure","departure date","sailed","date to","departed"],{date:true}),
+     col("level","Security level",["isps level","ship security level","level","sec level","security level of ship"]),
+     col("measures","Special security measures",["special additional security measures","additional measures","measures taken","special measures"]),
+     col("sts","Ship-to-ship activity",["sts","sts activity","ship to ship"])]},
+  {key:"crew", title:"Crew list", min:3, start:1, hint:/crew/i,
+   note:"Covers the crew list (FAL 5), crew's effects declaration (FAL 4) and the crew currency declaration.",
+   cols:[col("no","No."), ...PERSON_COLS, col("rank","Rank or rating",["rank","rating","capacity","designation","duty"]),
+     col("nationality","Nationality",["citizenship"]), col("dob","Date of birth",["dob","birth date","d o b"],{date:true}),
+     col("pob","Place of birth",["birth place","pob"]),
+     col("dobpob","Date and place of birth",[],{calc:e => [e.dob, e.pob].filter(Boolean).join(", "), into:"dob"}),
+     col("gender","Gender",["sex"]),
+     col("passport","Passport number",["passport no","passport","travel document no","identity document no","nature no of identity document"]),
+     col("passport_expiry","Passport expiry",["passport validity","passport valid until","expiry date of identity document","passport expiry date"],{date:true}),
+     col("passport_state","Passport issuing state",["issuing state of identity document","issuing state","passport issued at"]),
+     col("cdc","Seaman's book number",["cdc no","seaman book no","seaman book","sid no","discharge book no","seafarer identity document"]),
+     col("cdc_expiry","Seaman's book expiry",["cdc expiry","seaman book validity","seaman book expiry date"],{date:true}),
+     col("joined","Date of joining",["sign on date","date joined","joining date","date of sign on","embarked"],{date:true}),
+     col("join_port","Port of joining",["place of joining","sign on port","port joined","place of embarkation"]),
+     col("visa","Visa number",["visa no","visa"]),
+     col("effects_cig","Cigarettes / tobacco",["cigarettes","tobacco","cigars"]),
+     col("effects_spirits","Spirits / wine / beer",["spirits","liquor","alcohol","wine","beer"]),
+     col("effects_other","Other effects",["other effects","effects ineligible for relief","other articles","personal effects","electronics"]),
+     col("currency","Currency carried",["currency","type of currency","foreign currency","kind of currency"]),
+     col("amount","Amount",["currency amount","amount of currency","value"])]},
+  {key:"passengers", title:"Passenger list", min:3, start:1, hint:/passenger/i, note:"Passenger list (FAL 6).",
+   cols:[col("no","No."), ...PERSON_COLS, col("nationality","Nationality",["citizenship"]), col("dob","Date of birth",["dob","birth date"],{date:true}),
+     col("pob","Place of birth",["birth place"]), col("gender","Gender",["sex"]),
+     col("id_type","Type of identity document",["type of id","document type","travel document type","type of document"]),
+     col("id_number","Identity document number",["passport no","passport number","document no","id no","serial no of identity document"]),
+     col("id_state","Issuing state",["issuing state of identity document","issued by"]),
+     col("id_expiry","Document expiry",["expiry date","passport expiry","expiry date of identity document"],{date:true}),
+     col("embark","Port of embarkation",["embarkation","embarked at"]), col("disembark","Port of disembarkation",["disembarkation"]),
+     col("transit","Transit passenger",["transit","transit or not"]), col("visa","Visa number",["visa no","visa"])]},
+  {key:"cargo", title:"Cargo manifest", min:3, start:1, hint:/cargo|manifest|dangerous|goods/i,
+   note:"One row per parcel or bill of lading. Covers the cargo declaration (FAL 2), cargo manifest and dangerous goods manifest (FAL 7).",
+   cols:[col("no","No."), col("bl","B/L number",["b l no","bill of lading no","bl no","b l","reference no","booking reference no"]),
+     col("load_port","Port of loading",["loading port","loaded at"]), col("discharge_port","Port of discharge",["discharge port","discharging port"]),
+     col("shipper","Shipper",["shippers"]), col("consignee","Consignee",["receiver","consignees"]), col("notify","Notify party",["notify"]),
+     col("marks","Marks and numbers",["marks nos","marks","container id no","container no"]),
+     col("packages","Number and kind of packages",["no kind of packages","packages","kind of packages","no of packages"]),
+     col("description","Description of goods",["description","cargo","cargo name","commodity","proper shipping name","description of cargo","goods","product","technical name","grade"]),
+     col("un","UN number",["un no","unno"]), col("class","IMO class",["class","imdg class","hazard class","imo hazard class"]),
+     col("pg","Packing group"), col("subrisk","Subsidiary risk",["subsidiary risks","sub risk"]),
+     col("flash","Flashpoint",["flash point","flashpoint in c"]), col("pollutant","Marine pollutant"),
+     col("marpol","MARPOL category",["pollution category"]),
+     col("weight","Gross weight / quantity",["gross weight","weight","quantity","quantity mt","mass","gross mass","weight kg","net weight","qty"]),
+     col("measurement","Measurement / volume",["measurement","volume","cbm","m3"]),
+     col("stowage","Stowage position / tanks",["stowage","stowage position","tank","tanks","location on board"]), col("ems","EmS")]},
+  {key:"stores", title:"Ship's stores", min:2, hint:/stores/i, keyCol:"article",
+   note:"Ship's stores declaration (FAL 3). Fill the quantity for the articles you carry and add rows for anything else.",
+   seed:["Cigarettes","Tobacco","Spirits","Wine","Beer","Soft drinks","Meat","Fish","Provisions (dry)","Vegetables","Fuel oil","Diesel / gas oil","Lubricating oil","Fresh water","Paints","Chemicals","Medical narcotics (medicine chest)","Deck stores","Engine stores"],
+   cols:[col("no","No."), col("article","Name of article",["article","articles","description","item","particulars","stores","name of stores"]),
+     col("quantity","Quantity",["qty","quantity on board","rob","amount"]),
+     col("location","Location on board",["place of storage","location","where stored","stowage"])]},
+  {key:"certs", title:"Certificates", min:2, hint:/certificate/i, keyCol:"name",
+   note:"Statutory and trading certificates. These also fill single blanks such as ISSC number or IOPP expiry.",
+   cols:[col("no","No."), col("name","Certificate",["name of certificate","type of certificate","certificate name","certificates","document","title of certificate"]),
+     col("number","Number",["certificate number","certificate no","cert no","reference"]),
+     col("issued_by","Issued by",["issuing authority","authority","issuer","place of issue","issued at"]),
+     col("issue_date","Date of issue",["issue date","issued on","date issued","issued","issue"],{date:true}),
+     col("expiry","Date of expiry",["expiry","expiry date","valid until","validity","valid till","expires"],{date:true}),
+     col("last_survey","Last survey",["last annual","last endorsement","annual survey","last annual survey","endorsed"],{date:true})]},
+];
+const listByKey = k => LISTS.find(l => l.key === k);
+/* The order of sections on the ship table screen. "@" entries are lists. */
+const ORDER = ["Identity","Tonnage and dimensions","Owners and managers","Master and crew","Voyage (update at each port)","@ports",
+  "Bunkers, water and waste","Security (ISPS)","@certs","Cargo","@cargo","Terminal information (tanker)","Mooring equipment",
+  "Health declaration","Nil list declarations","@crew","@passengers","@stores","Your own fields"];
+
+/* Clearly fictional sample values, used only by the "Load example ship" button. */
+const EXAMPLE = {vessel_name:"MT EXAMPLE SPIRIT",imo_number:"9999999",call_sign:"XMPL1",mmsi:"999999999",flag:"Liberia",port_of_registry:"Monrovia",
+  official_number:"00000",vessel_type:"Oil/Chemical Tanker",year_built:"2015",gross_tonnage:"29,500",net_tonnage:"13,200",deadweight:"49,900 MT",
+  loa:"183.00 m",breadth:"32.20 m",summer_draft:"12.90 m",owner:"Example Shipping Ltd",manager:"Example Ship Management",master_name:"Capt. A. Sample",
+  crew_total:"24",voyage_number:"V.000",port_of_call:"Sampleport",arrival_date:"01 Jan 2030 0600 LT",last_port:"Port A",next_port:"Port B",
+  cargo:"Gas oil",agent:"Sample Agency",issc_number:"ISSC-0000",issc_issued_by:"Example Class",issc_issue_date:"01 Jan 2028",issc_expiry:"31 Dec 2032",
+  iopp_number:"IOPP-0000",iopp_issued_by:"Example Class",iopp_expiry:"31 Dec 2030",security_level:"1",moor_ropes_no:"16",moor_rope_mbl:"64 t"};
+const EXAMPLE_LISTS = {
+  ports:[{port:"Port A",country:"Country A",arrival:"20 Dec 2029",departure:"22 Dec 2029",level:"1",measures:"Nil"},
+         {port:"Port C",country:"Country C",arrival:"05 Dec 2029",departure:"07 Dec 2029",level:"1",measures:"Nil"},
+         {port:"Port D",country:"Country D",arrival:"18 Nov 2029",departure:"20 Nov 2029",level:"1",measures:"Nil"}],
+  crew:[{family:"SAMPLE",given:"Alex",rank:"Master",nationality:"Exampleland",dob:"01 Jan 1980",passport:"X0000001",passport_expiry:"01 Jan 2033"},
+        {family:"TESTER",given:"Sam",rank:"Chief Officer",nationality:"Exampleland",dob:"02 Feb 1985",passport:"X0000002",passport_expiry:"02 Feb 2032"},
+        {family:"DEMO",given:"Jo",rank:"Chief Engineer",nationality:"Exampleland",dob:"03 Mar 1978",passport:"X0000003",passport_expiry:"03 Mar 2031"}],
+  cargo:[{bl:"EX-001",load_port:"Port A",discharge_port:"Sampleport",description:"Gas oil",un:"1202",class:"3",weight:"32,000 MT",stowage:"1P-6S"}],
+};
+
+/* =====================================================================
+   PART 2. SAVED DATA
+   state.values   key -> what you typed in the ship table
+   state.custom   your own extra fields
+   state.aliases  form label -> field key, learned from your corrections
+   ===================================================================== */
+let state = {values:{}, custom:[], aliases:{}, lists:{}, updatedAt:0, example:false};
+const LOCAL_KEY = "port-papers-v1";
+
+/* All fields = built-in catalogue + your custom ones, in one list of objects. */
+const BASE_FIELDS = CATALOGUE.map(([group,key,label,syn]) => ({group,key,label,syn}));
+for(const c of CERTS) for(const a of CERT_ATTRS){
+  const syn = [];
+  for(const name of [c.name, ...c.syn]) for(const say of a.say) syn.push(name + " " + say);
+  BASE_FIELDS.push({group:"Certificates", key:c.id + "_" + a.key, label:c.name + ", " + a.label, syn, cert:true, must:new Set(c.must)});
+}
+function allFields(){
+  return BASE_FIELDS.concat(state.custom.map(c => ({group:"Your own fields", key:c.key, label:c.label, syn:[], custom:true})));
+}
+
+/* Make sure loaded data has the expected shape, whatever its source. */
+function tidy(s){
+  s = s && typeof s === "object" ? s : {};
+  return {values: s.values && typeof s.values==="object" ? s.values : {},
+          custom: Array.isArray(s.custom) ? s.custom.filter(c => c && c.key && c.label) : [],
+          aliases: s.aliases && typeof s.aliases==="object" ? s.aliases : {},
+          lists: (() => { const out = {}; const src = s.lists && typeof s.lists==="object" ? s.lists : {};
+            for(const k in src) if(Array.isArray(src[k])) out[k] = src[k].filter(r => r && typeof r==="object"); return out; })(),
+          updatedAt: Number(s.updatedAt)||0, example: !!s.example};
+}
+
+/* Browser storage can be missing or blocked, so every use is wrapped in try/catch. */
+function loadLocal(){ try{ const t = localStorage.getItem(LOCAL_KEY); if(t) state = tidy(JSON.parse(t)); }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); }catch(e){} }
+
+/* The page asks its host for optional abilities (account storage, downloads, Claude).
+   Each resolves to null when it is not available, and the page must still work. */
+function cap(name){
+  try{ return window.claude && window.claude.use ? window.claude.use(name).catch(() => null) : Promise.resolve(null); }
+  catch(e){ return Promise.resolve(null); }
+}
+
+let accountDoc = null;      // where the data is kept in your Claude account, if available
+let saveTimer = null, writing = false, writeAgain = false, edited = false;
+
+function setSaveState(kind){
+  const el = document.getElementById("saveState");
+  const map = {saving:["Saving",""], account:["Saved to your account","ok"], device:["Saved on this device","ok"]};
+  const [text, cls] = map[kind] || ["Loading",""];
+  el.textContent = text; el.className = "pill " + cls;
+}
+
+/* Called after every change: save on the device at once, then to the account after a short pause
+   so that typing does not cause a write per keystroke. */
+function scheduleSave(){
+  edited = true;
+  state.updatedAt = Date.now();
+  saveLocal();
+  setSaveState("saving");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 900);
+}
+async function flushSave(){
+  if(!accountDoc){ setSaveState("device"); return; }
+  if(writing){ writeAgain = true; return; }          // one write at a time
+  writing = true;
+  try{ await accountDoc.set({json: JSON.stringify(state), updatedAt: state.updatedAt}); setSaveState("account"); }
+  catch(e){ setSaveState("device"); }
+  writing = false;
+  if(writeAgain){ writeAgain = false; flushSave(); }
+}
+
+/* On start: show device data immediately, then look for a newer copy in the account. */
+async function initStore(){
+  loadLocal();
+  renderShip();
+  const [db, user] = await Promise.all([cap("db"), cap("user")]);
+  let uid = null;
+  try{ uid = user ? await user.id() : null; }catch(e){}
+  if(!db || !uid){ setSaveState("device"); return; }
+  try{
+    const ref = db.doc("data/users/" + uid + "/shipdata");
+    const snap = await Promise.race([ref.get(), new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 10000))]);
+    accountDoc = ref;
+    if(snap.exists){
+      const remote = tidy(JSON.parse((snap.data() || {}).json || "{}"));
+      if(!edited && remote.updatedAt >= state.updatedAt){ state = remote; saveLocal(); renderShip(); setSaveState("account"); }
+      else flushSave();
+    } else if(Object.keys(state.values).length){ flushSave(); }
+    else setSaveState("account");
+  }catch(e){ setSaveState("device"); }
+}
+
+/* =====================================================================
+   PART 3. MATCHING A FORM LABEL TO A FIELD
+   "1.1 Name of Vessel:" and "Ship's name" must both land on vessel_name.
+   Step a: reduce a label to a small set of plain words.
+   Step b: compare word sets and take the closest field.
+   ===================================================================== */
+const SAME = {vessel:"ship",vessels:"ship",ships:"ship",captain:"master",draught:"draft",telephone:"phone",tel:"phone",
+  mail:"email",tons:"tonnage",registered:"registry",nationality:"nationality"};
+const SKIP = new Set(["of","the","a","an","s","and","or","in","on","at","for","to","no","nr","number","if","any","e"]);
+
+/* norm(): lower case, drop leading numbering like "1.2" or "(3)", keep only letters and digits. */
+function norm(s){
+  return String(s||"").toLowerCase().replace(/e-mail/g,"email").replace(/^\s*\(?\d+(\.\d+)*[.)]?\s+/, "")
+    .replace(/[^a-z0-9]+/g," ").trim();
+}
+/* words(): the label as a set of meaningful words, with common variants unified. */
+const wordCache = new Map();
+function words(s){
+  if(wordCache.has(s)) return wordCache.get(s);
+  const out = new Set(); wordCache.set(s, out);
+  for(const w of norm(s).split(" ")){ if(!w) continue; const v = SAME[w] || w; if(!SKIP.has(v)) out.add(v); }
+  return out;
+}
+/* closeness(): 1 when both sets are equal, 0 when nothing is shared (F1 score). */
+function closeness(a, b){
+  if(!a.size || !b.size) return 0;
+  let common = 0; for(const w of a) if(b.has(w)) common++;
+  if(!common) return 0;
+  const p = common / a.size, r = common / b.size;
+  return 2*p*r / (p+r);
+}
+function matchField(label){
+  const n = norm(label);
+  if(!n) return null;
+  if(n in state.aliases) return state.aliases[n] || null;   // a correction you made earlier wins
+  const w = words(label);
+  if(!w.size || w.size > 7) return null;                     // long sentences are not labels
+  let best = null, bestScore = 0;
+  for(const f of allFields()){
+    if(f.must && !Array.from(w).some(x => f.must.has(x))) continue;      // certificate fields need their key word
+    for(const wording of [f.label, f.key.replace(/_/g," "), ...f.syn]){
+      const sc = closeness(w, words(wording));
+      if(sc > bestScore){ bestScore = sc; best = f.key; }
+    }
+  }
+  return bestScore >= 0.8 ? best : null;
+}
+
+/* =====================================================================
+   PART 3b. LISTS: reading your rows and recognising list tables on forms
+   ===================================================================== */
+/* The rows of a list that actually hold data. Certificates are stored as single fields,
+   so their rows are assembled here. */
+function listRows(key){
+  const list = listByKey(key);
+  if(key === "certs") return CERTS.map(c => { const e = {name:c.name, _syn:c.syn}; for(const a of CERT_ATTRS) e[a.key] = state.values[c.id+"_"+a.key] || ""; return e; })
+    .filter(e => CERT_ATTRS.some(a => e[a.key].trim()));
+  return (state.lists[key] || []).filter(e => list.cols.some(c => !c.calc && c.key !== "no" && c.key !== list.keyCol && String(e[c.key]||"").trim()));
+}
+/* The text for one cell of a table on a form: n is the running number for a "No." column. */
+function entryValue(list, e, key, n){
+  if(key === "no") return String(n);
+  const c = list.cols.find(x => x.key === key);
+  return c && c.calc ? c.calc(e) : String(e[key] || "");
+}
+const colLabel = (list, key) => (list.cols.find(c => c.key === key) || {label:key}).label;
+const SERIAL = new Set(["","no","s no","sr no","sl no","sn","sr","sl","serial no","serial","number","item no"]);
+/* Which column of a list does this column title mean? */
+function matchCol(list, text){
+  if(SERIAL.has(String(text).toLowerCase().replace(/[^a-z#]+/g," ").trim()) || text.trim() === "#") return "no";
+  const w = words(text); if(!w.size || w.size > 8) return null;
+  let best = null, bestScore = 0;
+  for(const c of list.cols){ if(c.key === "no") continue;
+    for(const wording of [c.label, ...c.syn]){ const sc = closeness(w, words(wording)); if(sc > bestScore){ bestScore = sc; best = c.key; } } }
+  return bestScore >= 0.8 ? best : null;
+}
+/* Is this row of cells the title row of a list table? cells = [{text, id}].
+   Returns the list and a map id -> column key, or null. hint = nearby text, used to
+   tell a crew list from a passenger list when the titles are the same. */
+function findHeader(cells, hint, only){
+  let best = null;
+  for(const list of (only ? [only] : LISTS)){
+    const map = new Map(), used = new Set();
+    for(const c of cells){ if(!c.text || c.text.length > 60) continue; const k = matchCol(list, c.text); if(k && !used.has(k)){ used.add(k); map.set(c.id, k); } }
+    const n = Array.from(used).filter(k => k !== "no").length;
+    const score = n + (list.hint && list.hint.test(hint || "") ? 0.5 : 0);
+    if(n >= (only ? 2 : list.min) && (!best || score > best.score)) best = {list, map, score};
+  }
+  return best;
+}
+/* For lists where the form may already print the item names (certificates, stores):
+   find your row that matches a printed name. */
+function bestEntry(list, entries, text){
+  const w = words(text); let best = -1, bestScore = 0;
+  entries.forEach((e, i) => { for(const name of [e[list.keyCol] || "", ...(e._syn || [])]){ const sc = closeness(w, words(name)); if(sc > bestScore){ bestScore = sc; best = i; } } });
+  return bestScore >= 0.75 ? best : -1;
+}
+/* Decide which of your rows goes on which row of the form's table.
+   rows = the form's rows after the title row: {keyText} if a name is printed there, {empty:true} if blank.
+   grow = the table may be extended when you have more rows than it has. */
+function planRows(list, entries, rows, grow){
+  const out = [], used = new Set(), free = [];
+  rows.forEach((row, ri) => {
+    if(list.keyCol && row.keyText){ const ei = bestEntry(list, entries, row.keyText); if(ei >= 0 && !used.has(ei)){ used.add(ei); out.push({ri, ei, keyed:true, n:out.length+1}); } }
+    else if(row.empty) free.push(ri);
+  });
+  if(out.length) return out;                       // the form prints the names itself: fill only those rows
+  for(let k = 0; k < entries.length; k++){
+    const ri = k < free.length ? free[k] : (grow ? rows.length + (k - free.length) : -1);
+    if(ri < 0) break;
+    out.push({ri, ei:k, n:k+1});
+  }
+  return out;
+}
+/* Excel stores dates as day counts; turn 45000 into "15 Mar 2023". */
+function excelDate(v){
+  if(!/^\d{5}(\.\d+)?$/.test(v) || +v < 10000 || +v > 90000) return v;
+  const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(+v) * 864e5);
+  return String(d.getUTCDate()).padStart(2,"0") + " " + "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")[d.getUTCMonth()] + " " + d.getUTCFullYear();
+}
+
+/* =====================================================================
+   PART 4. SMALL HELPERS
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+/* el("div", {class:"x"}, child, child) builds a DOM element without innerHTML. */
+function el(tag, props, ...kidsList){
+  const e = document.createElement(tag);
+  for(const k in (props||{})){
+    if(k === "class") e.className = props[k];
+    else if(k.startsWith("on")) e.addEventListener(k.slice(2), props[k]);
+    else if(props[k] === true) e.setAttribute(k, "");
+    else if(props[k] !== false && props[k] != null) e.setAttribute(k, props[k]);
+  }
+  for(const c of kidsList.flat()) if(c != null) e.append(c);
+  return e;
+}
+let toastTimer;
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 3200); }
+
+/* XML helpers. .xlsx and .docx store their content as XML; these find elements by name. */
+const kids = (node, name) => node ? Array.from(node.children).filter(c => c.localName === name) : [];
+const desc = (node, name) => Array.from(node.getElementsByTagNameNS("*", name));
+const XMLNS = "http://www.w3.org/XML/1998/namespace";
+function parseXml(text){ return new DOMParser().parseFromString(text, "application/xml"); }
+function writeXml(doc){
+  const s = new XMLSerializer().serializeToString(doc).replace(/^<\?xml[^>]*\?>\s*/, "");
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s;
+}
+/* A "blank" typed into a form: ____ or ....... */
+const BLANK = /_{3,}|\.{5,}|…{2,}/g;
+const hasLetters = s => /[A-Za-z]/.test(s);
+const cleanLabel = s => String(s).replace(/\s+/g," ").replace(/^[\s,;:)\-]+/, "").replace(/[\s:\-]+$/, "").trim();
+
+/* =====================================================================
+   PART 5. EXCEL (.xlsx)
+   Find label cells, decide which empty cell is the answer box, write there.
+   Only the answer cells are changed, so formatting stays intact.
+   ===================================================================== */
+const colNum = letters => { let n = 0; for(const ch of letters) n = n*26 + (ch.charCodeAt(0)-64); return n; };
+const colName = n => { let s = ""; while(n > 0){ const m = (n-1) % 26; s = String.fromCharCode(65+m) + s; n = (n-m-1)/26; } return s; };
+const splitRef = ref => { const m = /^([A-Z]+)(\d+)$/.exec(ref.replace(/\$/g,"")); return m ? {c: colNum(m[1]), r: +m[2]} : null; };
+
+/* Open the workbook and read every sheet into a simple model:
+   cells ("row,col" -> text), merged blocks, and helpers to ask "what is at row r, column c". */
+async function readXlsx(bytes){
+  const zip = await JSZip.loadAsync(bytes);
+  const read = async path => { const f = zip.file(path); return f ? parseXml(await f.async("string")) : null; };
+
+  // Excel keeps each distinct text once in a shared list; cells point to it by number.
+  const shared = [];
+  const sst = await read("xl/sharedStrings.xml");
+  if(sst) for(const si of desc(sst,"si")) shared.push(desc(si,"t").filter(t => t.parentNode.localName !== "rPh").map(t => t.textContent).join(""));
+
+  // workbook.xml lists the sheets; the .rels file says which file holds each one.
+  const wb = await read("xl/workbook.xml"), rels = await read("xl/_rels/workbook.xml.rels");
+  if(!wb || !rels) throw new Error("This does not look like a valid .xlsx file.");
+  const target = {};
+  for(const r of desc(rels,"Relationship")) target[r.getAttribute("Id")] = r.getAttribute("Target");
+
+  const sheets = [];
+  for(const sh of desc(wb,"sheet")){
+    const rid = sh.getAttribute("r:id") || Array.from(sh.attributes).filter(a => a.localName === "id" && a.prefix).map(a => a.value)[0];
+    let path = target[rid]; if(!path) continue;
+    path = path.startsWith("/") ? path.slice(1) : "xl/" + path;
+    const doc = await read(path); if(!doc || !desc(doc,"sheetData").length) continue;
+
+    // Read every cell into a map "row,col" -> {text, isText, formula}.
+    const cells = new Map(); let maxR = 0, maxC = 0;
+    for(const c of desc(doc,"c")){
+      const p = splitRef(c.getAttribute("r") || ""); if(!p) continue;
+      const t = c.getAttribute("t"), v = kids(c,"v")[0];
+      let text = "";
+      if(t === "s") text = shared[+(v ? v.textContent : -1)] || "";
+      else if(t === "inlineStr") text = desc(c,"t").map(x => x.textContent).join("");
+      else if(v) text = v.textContent;
+      cells.set(p.r+","+p.c, {text: text.trim(), isText: t==="s"||t==="inlineStr"||t==="str", formula: kids(c,"f").length > 0});
+      maxR = Math.max(maxR, p.r); maxC = Math.max(maxC, p.c);
+    }
+    // Merged cells: every cell of a merged block points to the block.
+    const merge = new Map();
+    for(const m of desc(doc,"mergeCell")){
+      const [a, b] = (m.getAttribute("ref")||"").split(":").map(splitRef); if(!a || !b) continue;
+      const box = {r1:a.r, c1:a.c, r2:b.r, c2:b.c};
+      maxR = Math.max(maxR, b.r); maxC = Math.max(maxC, b.c);
+      if((b.r-a.r+1)*(b.c-a.c+1) > 4000) continue;
+      for(let r=a.r; r<=b.r; r++) for(let c=a.c; c<=b.c; c++) merge.set(r+","+c, box);
+    }
+    const boxOf = (r,c) => merge.get(r+","+c) || {r1:r, c1:c, r2:r, c2:c};
+    const textAt = (r,c) => { const b = boxOf(r,c); const x = cells.get(b.r1+","+b.c1); return x ? x.text : ""; };
+    const isEmpty = (r,c) => { const b = boxOf(r,c); const x = cells.get(b.r1+","+b.c1); return !x || (!x.text && !x.formula); };
+    const ordered = Array.from(cells.entries()).map(([k,v]) => { const [r,c] = k.split(",").map(Number); return {r,c,...v}; })
+      .sort((a,b) => a.r-b.r || a.c-b.c);
+    const name = sh.getAttribute("name");
+    sheets.push({name, path, doc, cells, maxR, maxC, boxOf, textAt, isEmpty, ordered, edits: new Map(),
+      hint: name + " " + ordered.filter(c => c.isText).map(c => c.text).join(" ").slice(0, 3000)});
+  }
+  return {zip, sheets};
+}
+
+/* Find list tables on a sheet: a row whose cells are column titles of one of the lists,
+   followed by the rows to fill. */
+function sheetTables(sh, only){
+  const out = [], byRow = new Map();
+  for(const c of sh.ordered) if(c.text){ if(!byRow.has(c.r)) byRow.set(c.r, []); byRow.get(c.r).push(c); }
+  let skipUntil = 0;
+  for(const [r, cs] of byRow){
+    if(r < skipUntil || cs.length < 2) continue;
+    const hdr = findHeader(cs.map(c => ({text:c.text, id:c.c})), sh.hint, only); if(!hdr) continue;
+    const start = Math.max(...cs.filter(c => hdr.map.has(c.c)).map(c => sh.boxOf(c.r, c.c).r2)) + 1;   // first row under the titles
+    const cols = Array.from(hdr.map), keyC = (cols.find(([c,k]) => k === hdr.list.keyCol) || [])[0];
+    const rows = []; let grow = true, rr = start;
+    for(; rr <= sh.maxR && rows.length < 400; rr++){
+      const keyText = keyC ? sh.textAt(rr, keyC) : "";
+      if(keyText && hdr.list.keyCol){ rows.push({r:rr, keyText}); continue; }
+      if(!cols.every(([c,k]) => k === "no" ? !hasLetters(sh.textAt(rr, c)) : sh.isEmpty(rr, c))){ grow = false; break; }   // something printed here: the table ends
+      rows.push({r:rr, keyText:"", empty:true});
+    }
+    out.push({list:hdr.list, r, start, cols, rows, grow}); skipUntil = rr;
+  }
+  return out;
+}
+
+async function openXlsx(bytes){
+  const {zip, sheets} = await readXlsx(bytes);
+  const slots = [];
+  for(const sheet of sheets){
+    const {maxR, maxC, boxOf, textAt, isEmpty, ordered} = sheet;
+    const claimed = new Set(), skipRows = new Set();
+
+    // --- list tables (crew list, ports of call, certificates ...) ---
+    for(const t of sheetTables(sheet)){
+      for(let r = t.r; r < t.start; r++) skipRows.add(r);
+      t.rows.forEach(x => skipRows.add(x.r));
+      slots.push({table:true, list:t.list.key, label:t.list.title + " table", where:sheet.name + ", row " + t.r, room: t.grow ? Infinity : t.rows.filter(x => x.empty).length, cols:t.cols.map(([c,k]) => colLabel(t.list, k)),
+        set(entries){
+          for(const a of planRows(t.list, entries, t.rows, t.grow)){
+            const r = t.start + a.ri;
+            for(const [c,k] of t.cols){
+              if(a.keyed && k === t.list.keyCol) continue;
+              const v = entryValue(t.list, entries[a.ei], k, a.n); if(!v) continue;
+              if(a.ri < t.rows.length && !isEmpty(r, c)) continue;          // never overwrite what the form already has
+              const b = boxOf(r, c); sheet.edits.set(colName(b.c1) + b.r1, {r:b.r1, c:b.c1, write:v});
+            }
+          }
+        }});
+    }
+
+    // --- single labels with a blank ---
+    for(const cell of ordered){
+      if(skipRows.has(cell.r)) continue;
+      if(!cell.isText || !hasLetters(cell.text) || cell.text.length > 90) continue;
+      const box = boxOf(cell.r, cell.c);
+      const add = (label, r, c, mode, n) => {
+        const ref = colName(c) + r;
+        slots.push({label, where: sheet.name + "!" + ref, set(value){
+          const e = sheet.edits.get(ref) || {r, c, base: mode==="write" ? null : cell.text, fills:{}, tail:null, write:null};
+          if(mode === "write") e.write = value; else if(mode === "blank") e.fills[n] = value; else e.tail = value;
+          sheet.edits.set(ref, e);
+        }});
+      };
+      // Case 1: the blank is typed inside the label cell itself, "Flag: ______".
+      const blanks = Array.from(cell.text.matchAll(BLANK));
+      if(blanks.length){
+        let prev = 0;
+        blanks.forEach((m, n) => { const label = cleanLabel(cell.text.slice(prev, m.index)); prev = m.index + m[0].length; if(hasLetters(label)) add(label, cell.r, cell.c, "blank", n); });
+        continue;
+      }
+      const label = cleanLabel(cell.text);
+      // Case 2: an empty cell to the right (stepping over a cell holding only ":").
+      let rc = box.c2 + 1;
+      if(/^[:\-–]$/.test(textAt(cell.r, rc))) rc = boxOf(cell.r, rc).c2 + 1;
+      const rightFree = isEmpty(cell.r, rc) && !claimed.has(cell.r+","+boxOf(cell.r,rc).c1);
+      const belowFree = box.r2 + 1 <= maxR && !skipRows.has(box.r2+1) && isEmpty(box.r2+1, box.c1) && !claimed.has(boxOf(box.r2+1, box.c1).r1+","+boxOf(box.r2+1, box.c1).c1);
+      let t = null;
+      if(rightFree && rc <= maxC) t = boxOf(cell.r, rc);
+      else if(belowFree) t = boxOf(box.r2+1, box.c1);          // Case 3: an empty cell below
+      else if(rightFree && rc === maxC + 1) t = boxOf(cell.r, rc);
+      if(t){ claimed.add(t.r1+","+t.c1); add(label, t.r1, t.c1, "write"); }
+      else if(/:\s*$/.test(cell.text) && !textAt(cell.r, rc)) add(label, cell.r, cell.c, "tail");   // Case 4: write after the colon
+    }
+  }
+
+  /* Put text into one cell of a sheet, creating the row or cell if the file has none there. */
+  function setCell(doc, r, c, value){
+    const data = desc(doc,"sheetData")[0], ns = data.namespaceURI, ref = colName(c) + r;
+    let row = kids(data,"row").find(x => +x.getAttribute("r") === r);
+    if(!row){
+      row = doc.createElementNS(ns, "row"); row.setAttribute("r", r);
+      data.insertBefore(row, kids(data,"row").find(x => +x.getAttribute("r") > r) || null);
+    }
+    let cell = kids(row,"c").find(x => x.getAttribute("r") === ref);
+    if(!cell){
+      cell = doc.createElementNS(ns, "c"); cell.setAttribute("r", ref);
+      row.insertBefore(cell, kids(row,"c").find(x => { const p = splitRef(x.getAttribute("r")||""); return p && p.c > c; }) || null);
+    }
+    while(cell.firstChild) cell.removeChild(cell.firstChild);
+    cell.setAttribute("t", "inlineStr");                       // text stored directly in the cell
+    const is = doc.createElementNS(ns, "is"), t = doc.createElementNS(ns, "t");
+    t.setAttributeNS(XMLNS, "xml:space", "preserve"); t.textContent = value;
+    is.appendChild(t); cell.appendChild(is);
+  }
+
+  return {slots, ext:"xlsx", async save(){
+    for(const sheet of sheets){
+      if(!sheet.edits.size) continue;
+      for(const e of sheet.edits.values()){
+        let text;
+        if(e.write != null) text = e.write;
+        else { let n = -1; text = e.base.replace(BLANK, m => { n++; return n in e.fills ? e.fills[n] : m; }); if(e.tail != null) text = text.replace(/\s*$/, "") + " " + e.tail; }
+        setCell(sheet.doc, e.r, e.c, text);
+      }
+      zip.file(sheet.path, writeXml(sheet.doc));
+    }
+    return zip.generateAsync({type:"uint8array", compression:"DEFLATE"});
+  }};
+}
+
+/* Read one of your lists out of an Excel file you already keep (a crew list, for example). */
+async function importList(list, input){
+  const f = input.files[0]; if(!f) return;
+  try{
+    const {sheets} = await readXlsx(await f.arrayBuffer()); let got = null;
+    for(const sh of sheets){
+      const t = sheetTables(sh, list)[0]; if(!t) continue;
+      const out = []; let gap = 0;
+      for(let r = t.start; r <= sh.maxR && gap < 3; r++){
+        const e = {};
+        for(const [c,k] of t.cols){ if(k === "no") continue; let v = sh.textAt(r, c); if(!v) continue;
+          const cdef = list.cols.find(x => x.key === k); if(cdef.date) v = excelDate(v); e[cdef.calc ? cdef.into : k] = v; }
+        if(Object.keys(e).length){ out.push(e); gap = 0; } else gap++;
+      }
+      if(out.length){ got = out; break; }
+    }
+    if(!got){ toast("No " + list.title.toLowerCase() + " table found in that file. Its column titles must sit in one row."); }
+    else if(list.key === "certs"){
+      const names = CERTS.map(c => ({name:c.name, _syn:c.syn})); let n = 0;
+      for(const e of got){ const i = bestEntry(list, names, e.name || ""); if(i < 0) continue; n++;
+        for(const a of CERT_ATTRS) if(e[a.key]) state.values[CERTS[i].id + "_" + a.key] = e[a.key]; }
+      toast(n + " certificates read from the file."); scheduleSave(); renderShip();
+    } else {
+      state.lists[list.key] = list.max ? got.slice(0, list.max) : got;
+      toast(got.length + " rows read into " + list.title + "."); scheduleSave(); renderShip();
+    }
+  }catch(e){ console.error(e); toast("That file could not be read. Use an .xlsx file."); }
+  input.value = "";
+}
+
+/* =====================================================================
+   PART 6. WORD (.docx)
+   Three places an answer can go: an empty table cell next to or under the label,
+   empty space inside the label's own cell, or a typed blank / colon in a paragraph.
+   ===================================================================== */
+async function openDocx(bytes){
+  const zip = await JSZip.loadAsync(bytes);
+  const file = zip.file("word/document.xml");
+  if(!file) throw new Error("This does not look like a valid .docx file.");
+  const doc = parseXml(await file.async("string"));
+  const W = doc.documentElement.namespaceURI, pre = doc.documentElement.prefix ? doc.documentElement.prefix + ":" : "";
+  const pText = p => desc(p,"t").filter(t => t.namespaceURI === W).map(t => t.textContent).join("");
+  const slots = [], ops = [], handled = new Set(), claimed = new Set(), inList = new Set();
+  const add = (label, where, op) => slots.push({label, where, set(value){ ops.push({...op, value}); }});
+  const docText = desc(doc,"t").map(t => t.textContent).join(" ").slice(0, 4000);
+
+  // --- tables ---
+  desc(doc,"tbl").forEach((tbl, ti) => {
+    const grid = kids(tbl,"tr").map(tr => { let col = 0; return kids(tr,"tc").map(tc => {
+      const span = +((kids(kids(tc,"tcPr")[0],"gridSpan")[0] || {getAttribute(){return 1;}}).getAttribute(pre+"val")) || 1;
+      const ps = kids(tc,"p"), text = ps.map(pText).join(" ").replace(/\s+/g," ").trim();
+      const o = {tc, col, ps, text, empty: !text && !desc(tc,"tbl").length && !desc(tc,"drawing").length && !desc(tc,"pict").length};
+      col += span; return o; }); });
+    // list tables: a title row matching one of the lists, then the rows to fill
+    const trs = kids(tbl,"tr"), cellAt = (ri, c) => (grid[ri] || []).find(x => x.col === c);
+    for(let hi = 0; hi < grid.length; hi++){
+      const hdr = grid[hi].length > 1 ? findHeader(grid[hi].map(c => ({text:c.text, id:c.col})), docText) : null; if(!hdr) continue;
+      const list = hdr.list, cols = Array.from(hdr.map), keyC = (cols.find(([c,k]) => k === list.keyCol) || [])[0];
+      const rows = []; let ri = hi + 1, grow = true;
+      for(; ri < grid.length; ri++){
+        const kc = keyC != null ? cellAt(ri, keyC) : null, keyText = kc ? kc.text : "";
+        if(keyText && list.keyCol){ rows.push({keyText}); continue; }
+        if(!cols.every(([c,k]) => !cellAt(ri, c) || (k === "no" ? !hasLetters(cellAt(ri, c).text) : !cellAt(ri, c).text))){ grow = false; break; }
+        rows.push({keyText:"", empty:true});
+      }
+      for(let k = hi; k < ri; k++) grid[k].forEach(c => { inList.add(c.tc); c.ps.forEach(p => handled.add(p)); });
+      const first = hi + 1;
+      slots.push({table:true, list:list.key, label:list.title + " table", where:"table " + (ti+1), room: grow ? Infinity : rows.filter(x => x.empty).length, cols:cols.map(([c,k]) => colLabel(list, k)),
+        set(entries){ ops.push({kind:"table", trs, grid, cols, list, rows, grow, first, entries}); }});
+      hi = ri - 1;
+    }
+    grid.forEach((row, ri) => row.forEach((cell, ci) => {
+      if(inList.has(cell.tc)) return;
+      if(!cell.text || !hasLetters(cell.text) || cell.text.length > 120) return;
+      if(cell.ps.some(p => pText(p).search(BLANK) >= 0)) return;   // typed blanks are handled below
+      const where = "table " + (ti+1) + ", row " + (ri+1);
+      const right = row[ci+1], below = (grid[ri+1] || []).find(x => x.col === cell.col);
+      // trailing empty paragraphs inside the label's own cell (boxed forms such as IMO FAL)
+      let firstEmpty = -1;
+      for(let i = cell.ps.length-1; i > 0 && !pText(cell.ps[i]).trim(); i--) firstEmpty = i;
+      cell.ps.forEach(p => handled.add(p));
+      if(right && right.empty && !claimed.has(right.tc)){ claimed.add(right.tc); add(cleanLabel(cell.text), where, {kind:"cell", tc:right.tc}); }
+      else if(firstEmpty > 0) add(cleanLabel(cell.text), where, {kind:"para", p:cell.ps[firstEmpty]});
+      else if(below && below.empty && !claimed.has(below.tc)){ claimed.add(below.tc); add(cleanLabel(cell.text), where, {kind:"cell", tc:below.tc}); }
+      else if(/:\s*$/.test(cell.text)) add(cleanLabel(cell.text), where, {kind:"append", p:cell.ps.filter(p => pText(p).trim()).pop()});
+    }));
+  });
+
+  // --- paragraphs: "Label: ______" and "Label:" ---
+  desc(doc,"p").forEach(p => {
+    const text = pText(p); if(!text.trim()) return;
+    const blanks = Array.from(text.matchAll(BLANK));
+    if(blanks.length){
+      let prev = 0;
+      for(const m of blanks){ const label = cleanLabel(text.slice(prev, m.index)); prev = m.index + m[0].length;
+        if(hasLetters(label) && label.length <= 120) add(label, "text line", {kind:"range", p, start:m.index, end:prev}); }
+    } else if(!handled.has(p) && /:\s*$/.test(text) && text.length <= 120 && hasLetters(text)) add(cleanLabel(text), "text line", {kind:"append", p});
+  });
+
+  /* Build a run (a piece of text with its formatting). Copies font settings but not bold/underline,
+     so the typed answer reads as an answer and not as part of the label. */
+  function makeRun(text, styleFrom){
+    const r = doc.createElementNS(W, pre+"r");
+    if(styleFrom){ const rp = styleFrom.cloneNode(true); for(const n of ["b","bCs","u"]) kids(rp,n).forEach(x => rp.removeChild(x)); r.appendChild(rp); }
+    const t = doc.createElementNS(W, pre+"t"); t.setAttributeNS(XMLNS, "xml:space", "preserve"); t.textContent = text;
+    r.appendChild(t); return r;
+  }
+  const paraStyle = p => kids(kids(p,"pPr")[0],"rPr")[0] || null;
+  function run(op){
+    if(op.kind === "cell"){ let p = kids(op.tc,"p")[0]; if(!p){ p = doc.createElementNS(W, pre+"p"); op.tc.appendChild(p); } p.appendChild(makeRun(op.value, paraStyle(p))); }
+    else if(op.kind === "para") op.p.appendChild(makeRun(op.value, paraStyle(op.p)));
+    else if(op.kind === "append"){ const runs = desc(op.p,"r").filter(r => kids(r,"t").length); const last = runs[runs.length-1];
+      const nr = makeRun(" " + op.value, last ? kids(last,"rPr")[0] : paraStyle(op.p));
+      if(last) last.parentNode.insertBefore(nr, last.nextSibling); else op.p.appendChild(nr); }
+    else if(op.kind === "table"){            // write list rows, adding table rows when the form has too few
+      let lastTr = op.trs[op.trs.length-1];
+      const tmpl = op.first + op.rows.length - 1;              // the row copied when more rows are needed
+      for(const a of planRows(op.list, op.entries, op.rows, op.grow)){
+        const gi = op.first + a.ri; let cells;
+        if(gi < op.grid.length) cells = op.grid[gi];
+        else {
+          const tr = op.trs[tmpl].cloneNode(true);
+          desc(tr,"r").forEach(r => r.parentNode.removeChild(r));
+          lastTr.parentNode.insertBefore(tr, lastTr.nextSibling); lastTr = tr;
+          const tcs = kids(tr,"tc"); cells = op.grid[tmpl].map((c, i) => ({tc:tcs[i], col:c.col, text:""}));
+        }
+        for(const [c,k] of op.cols){
+          if(a.keyed && k === op.list.keyCol) continue;
+          const cell = cells.find(x => x.col === c), v = entryValue(op.list, op.entries[a.ei], k, a.n);
+          if(cell && cell.tc && v && !cell.text) run({kind:"cell", tc:cell.tc, value:v});
+        }
+      }
+    }
+    else if(op.kind === "range"){            // replace characters start..end of the paragraph with the value
+      let pos = 0, first = true;
+      for(const t of desc(op.p,"t").filter(t => t.namespaceURI === W)){
+        const s = t.textContent, a = pos, b = pos + s.length; pos = b;
+        if(b <= op.start || a >= op.end) continue;
+        const from = Math.max(op.start, a) - a, to = Math.min(op.end, b) - a;
+        const lead = first && from > 0 && !/\s$/.test(s.slice(0, from)) ? " " : "";
+        t.textContent = s.slice(0, from) + (first ? lead + op.value : "") + s.slice(to);
+        t.setAttributeNS(XMLNS, "xml:space", "preserve"); first = false;
+      }
+    }
+  }
+  return {slots, ext:"docx", async save(){
+    // Ranges are applied from the end of each paragraph backwards so earlier positions stay valid.
+    ops.filter(o => o.kind !== "range").forEach(run);
+    ops.filter(o => o.kind === "range").sort((a,b) => b.start - a.start).forEach(run);
+    zip.file("word/document.xml", writeXml(doc));
+    return zip.generateAsync({type:"uint8array", compression:"DEFLATE"});
+  }};
+}
+
+/* =====================================================================
+   PART 7. PDF
+   Fillable PDFs have named boxes: the values go into the boxes.
+   Flat PDFs only have printed text and drawn lines: the page is measured to find each
+   label's answer space (underline, box or table cell) and the value is fitted into it.
+   ===================================================================== */
+let pdfjsLoading = null;
+function loadPdfjs(){
+  if(!pdfjsLoading) pdfjsLoading = import(new URL("pdf.min.js", document.baseURI).href).then(m => {
+    m.GlobalWorkerOptions.workerSrc = new URL("pdf.worker.min.js", document.baseURI).href; return m; });
+  return pdfjsLoading;
+}
+/* Read the printed text of each page as "segments": runs of words on one line, with their position. */
+async function pdfSegments(bytes){
+  const pdfjs = await loadPdfjs();
+  const pdf = await pdfjs.getDocument({data: new Uint8Array(bytes.slice(0))}).promise;
+  const pages = [];
+  for(let i = 1; i <= pdf.numPages; i++){
+    const page = await pdf.getPage(i), tc = await page.getTextContent();
+    const items = tc.items.filter(it => it.str && it.str.trim() && Math.abs(it.transform[1]) < 0.01)
+      .map(it => ({str: it.str, x: it.transform[4], y: it.transform[5], w: it.width, size: Math.hypot(it.transform[2], it.transform[3]) || it.height || 10}))
+      .sort((a,b) => b.y - a.y || a.x - b.x);
+    const lines = [];
+    for(const it of items){ const ln = lines[lines.length-1]; if(ln && Math.abs(ln.y - it.y) <= 0.4*it.size) ln.items.push(it); else lines.push({y: it.y, items:[it]}); }
+    const segs = [];
+    for(const ln of lines){
+      ln.items.sort((a,b) => a.x - b.x);
+      let seg = null; const row = [];
+      for(const it of ln.items){
+        if(seg && it.x - seg.x1 < 1.2*it.size){ seg.text += (it.x - seg.x1 > 0.15*it.size && !/\s$/.test(seg.text) ? " " : "") + it.str; seg.x1 = it.x + it.w; }
+        else { seg = {text: it.str, x0: it.x, x1: it.x + it.w, y: ln.y, size: it.size}; row.push(seg); }
+      }
+      row.forEach((s, k) => { s.nextX = row[k+1] ? row[k+1].x0 : null; segs.push(s); });
+    }
+    let rules = {h:[], v:[]};
+    try{ rules = await pdfRules(page, pdfjs); }catch(e){ console.warn("PDF lines could not be read", e); }
+    pages.push({segs, width: page.view[2] - page.view[0], h: rules.h, v: rules.v});
+  }
+  return pages;
+}
+/* Read the straight lines drawn on a page: underlines, table borders, box edges.
+   A PDF draws with a list of commands. We replay the ones that build paths, keep track of the
+   current scale/shift (the "matrix"), and collect horizontal lines (h) and vertical lines (v). */
+function mulM(m, n){ return [m[0]*n[0]+m[2]*n[1], m[1]*n[0]+m[3]*n[1], m[0]*n[2]+m[2]*n[3], m[1]*n[2]+m[3]*n[3], m[0]*n[4]+m[2]*n[5]+m[4], m[1]*n[4]+m[3]*n[5]+m[5]]; }
+async function pdfRules(page, pdfjs){
+  const O = pdfjs.OPS, list = await page.getOperatorList();
+  const strokes = new Set([O.stroke, O.closeStroke, O.fillStroke, O.eoFillStroke, O.closeFillStroke, O.closeEOFillStroke]);
+  const fills = new Set([O.fill, O.eoFill]);
+  const h = [], v = [], stack = []; let m = [1,0,0,1,0,0];
+  const edge = (a, b) => {
+    const dx = Math.abs(a[0]-b[0]), dy = Math.abs(a[1]-b[1]);
+    if(dy < 1 && dx > 8) h.push({y: (a[1]+b[1])/2, x0: Math.min(a[0],b[0]), x1: Math.max(a[0],b[0])});
+    else if(dx < 1 && dy > 8) v.push({x: (a[0]+b[0])/2, y0: Math.min(a[1],b[1]), y1: Math.max(a[1],b[1])});
+  };
+  for(let i = 0; i < list.fnArray.length; i++){
+    const fn = list.fnArray[i], a = list.argsArray[i];
+    if(fn === O.save) stack.push(m);
+    else if(fn === O.restore){ if(stack.length) m = stack.pop(); }
+    else if(fn === O.transform) m = mulM(m, a);
+    else if(fn === O.paintFormXObjectBegin){ stack.push(m); if(a && a[0] && a[0].length === 6) m = mulM(m, a[0]); }
+    else if(fn === O.paintFormXObjectEnd){ if(stack.length) m = stack.pop(); }
+    else if(fn === O.constructPath){
+      const paint = a[0], d = a[1] && a[1][0];
+      const stroked = strokes.has(paint), filled = fills.has(paint);
+      if(!d || (!stroked && !filled)) continue;              // clipping paths draw nothing
+      const pt = (x, y) => [x*m[0] + y*m[2] + m[4], x*m[1] + y*m[3] + m[5]];
+      const subs = []; let cur = null;
+      for(let j = 0; j < d.length;){
+        const c = d[j];
+        if(c === 0){ cur = [pt(d[j+1], d[j+2])]; subs.push(cur); j += 3; }             // move to
+        else if(c === 1){ if(cur) cur.push(pt(d[j+1], d[j+2])); j += 3; }                // line to
+        else if(c === 2){ cur = [pt(d[j+5], d[j+6])]; subs.push(cur); j += 7; }          // curve: not a straight edge
+        else if(c === 3){ cur = [pt(d[j+3], d[j+4])]; subs.push(cur); j += 5; }
+        else if(c === 4){ if(cur && cur.length) cur.push(cur[0]); j += 1; }              // close the shape
+        else break;
+      }
+      for(const sub of subs){
+        if(stroked){ for(let k = 0; k + 1 < sub.length; k++) edge(sub[k], sub[k+1]); continue; }
+        // filled only: a very thin filled bar is how many programs draw a border; big fills are backgrounds
+        const xs = sub.map(p => p[0]), ys = sub.map(p => p[1]);
+        const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+        if(y1 - y0 <= 3 && x1 - x0 > 8) h.push({y: (y0+y1)/2, x0, x1});
+        else if(x1 - x0 <= 3 && y1 - y0 > 8) v.push({x: (x0+x1)/2, y0, y1});
+      }
+    }
+  }
+  return {h, v};
+}
+
+/* Decide where the answer for one label goes and how much room there is.
+   Returns {kind, x, y, w, maxLines}: start point, usable width and how many lines fit.
+   Tried in this order:
+     line  - an underline that starts after the label
+     box   - empty space under the label inside its own box
+     cell  - an empty table cell to the right, or below
+     right - free space after the label on the same line
+     guess - nothing found: just under the label */
+function findSpace(pg, s){
+  const size = s.size, mid = s.y + 0.35*size, pageEdge = pg.width - 24;
+  const lim = s.nextX != null ? s.nextX - 3 : Infinity;                       // where the next text on this line starts
+  const vs = pg.v.filter(l => l.y0 - 1 <= mid && l.y1 + 1 >= mid);            // vertical lines beside this label
+  const hs = pg.h.filter(l => l.x0 <= s.x0 + 2 && l.x1 >= Math.min(s.x1, s.x0 + 20));   // horizontal lines above/below it
+  const cellL = Math.max(-Infinity, ...vs.filter(l => l.x <= s.x0 + 1).map(l => l.x));
+  const cellR = Math.min(Infinity, ...vs.filter(l => l.x >= s.x1 - 1).map(l => l.x));
+  const cellT = Math.min(Infinity, ...hs.filter(l => l.y >= s.y + 0.55*size).map(l => l.y));
+  const cellB = Math.max(-Infinity, ...hs.filter(l => l.y <= s.y - 1).map(l => l.y));
+  // is any other text inside this rectangle?
+  const textIn = (xa, xb, ya, yb) => pg.segs.some(t => t !== s && t.x1 > xa && t.x0 < xb && t.y + 0.7*t.size > ya && t.y < yb);
+  const linesIn = height => Math.max(1, Math.floor(height / (1.15*size)));
+
+  const ul = pg.h.filter(l => l.y >= s.y - 0.5*size && l.y <= s.y + 0.25*size && l.x0 >= s.x1 - 3 && l.x0 < lim && l.x0 - s.x1 < 150)
+    .sort((a, b) => a.x0 - b.x0)[0];
+  if(ul){ const x = Math.max(ul.x0, s.x1 + 0.3*size) + 1; return {kind:"line", x, y: ul.y + 2, w: Math.min(ul.x1, lim) - x, maxLines: 1}; }
+
+  if(cellB > -Infinity && s.y - cellB >= 1.7*size){
+    const xr = Math.min(cellR - 3, pageEdge);
+    if(!textIn(s.x0 - 1, xr, cellB + 1, s.y - 0.2*size)) return {kind:"box", x: s.x0, y: s.y - 1.35*size, w: xr - s.x0, maxLines: linesIn(s.y - cellB - 3)};
+  }
+  if(cellR < Infinity){
+    const nv = Math.min(Infinity, ...vs.filter(l => l.x > cellR + 5).map(l => l.x));
+    const ya = cellB > -Infinity ? cellB + 1 : s.y - 0.3*size, yb = cellT < Infinity ? cellT - 1 : s.y + size;
+    if(nv < Infinity && !textIn(cellR + 1, nv - 1, ya, yb))
+      return {kind:"cell", x: cellR + 3, y: s.y, w: nv - cellR - 6, maxLines: cellB > -Infinity ? 1 + Math.floor(Math.max(0, s.y - cellB - 2) / (1.15*size)) : 1};
+  }
+  const bx = s.x1 + 0.5*size, rightEnd = Math.min(lim, cellR - 2, pageEdge);
+  if(rightEnd - bx >= 45) return {kind:"right", x: bx, y: s.y, w: rightEnd - bx, maxLines: 1};
+  if(cellB > -Infinity){
+    const nb = Math.max(-Infinity, ...hs.filter(l => l.y < cellB - 5).map(l => l.y));
+    const xl = cellL > -Infinity ? cellL : s.x0 - 3, xr = Math.min(cellR, pageEdge);
+    if(nb > -Infinity && !textIn(xl + 1, xr - 1, nb + 1, cellB - 1))
+      return {kind:"cell", x: xl + 3, y: cellB - size - 3, w: xr - xl - 6, maxLines: linesIn(cellB - nb - 4)};
+  }
+  return {kind:"guess", x: s.x0, y: s.y - 1.25*size, w: Math.min(260, pageEdge - s.x0), maxLines: 1};
+}
+
+/* Make a value fit its space: first try one line (shrinking the letters a little),
+   then wrap onto more lines if the space is tall enough, then shrink down to 6 pt.
+   ok:false means even that was not enough and the text will run past the space. */
+function wrapText(font, text, size, width){
+  const lines = []; let line = "";
+  for(const word of text.split(/\s+/)){
+    if(font.widthOfTextAtSize(word, size) > width) return null;
+    const next = line ? line + " " + word : word;
+    if(font.widthOfTextAtSize(next, size) <= width) line = next; else { lines.push(line); line = word; }
+  }
+  if(line) lines.push(line);
+  return lines;
+}
+function fitText(font, value, sp, base){
+  const text = latin(value).trim();
+  const one = size => font.widthOfTextAtSize(text, size) <= sp.w;
+  for(let size = base; size >= Math.max(6, base*0.8); size -= 0.5) if(one(size)) return {ok:true, size, lines:[text]};
+  for(let size = base; size >= 6; size -= 0.5){
+    if(one(size)) return {ok:true, size, lines:[text]};
+    if(sp.maxLines > 1){ const lines = wrapText(font, text, size, sp.w); if(lines && lines.length <= Math.floor(sp.maxLines * base / size)) return {ok:true, size, lines}; }
+  }
+  return {ok:false, size:6, lines:[text]};
+}
+const SPACE_WORDS = {line:"on its line", box:"in its box", cell:"in the next cell", right:"after the label", guess:"under the label, no marked space found"};
+
+const latin = s => String(s).replace(/[^\x20-\x7E\xA0-\xFF]/g, "?");   // the built-in PDF font has Western letters only
+
+async function openPdf(bytes){
+  const {PDFDocument, StandardFonts, PDFTextField} = PDFLib;
+  const pdf = await PDFDocument.load(bytes.slice(0), {ignoreEncryption:true});
+  const pages = pdf.getPages();
+  let boxes = [];
+  try{ boxes = pdf.getForm().getFields().filter(f => f instanceof PDFTextField); }catch(e){}
+  let text = null;
+  try{ text = await pdfSegments(bytes); }catch(e){ console.warn("PDF text could not be read", e); }
+  const slots = [], draws = []; let font = null;
+
+  if(boxes.length){
+    // --- fillable PDF: one slot per text box. The label is the printed text beside the box,
+    //     or the box's internal name when no text is near it. ---
+    for(const f of boxes){
+      const name = f.getName();
+      const pretty = name.split(".").pop().replace(/\[\d+\]/g,"").replace(/[_\-]+/g," ").replace(/([a-z])([A-Z])/g,"$1 $2").trim();
+      let near = "";
+      try{
+        const wdg = f.acroField.getWidgets()[0], rc = wdg.getRectangle(), pref = wdg.P();
+        let pi = pages.findIndex(p => p.ref === pref);
+        if(pi < 0 && pages.length === 1) pi = 0;
+        const segs = text && pi >= 0 ? text[pi].segs : [];
+        const left = segs.filter(s => s.y > rc.y - 4 && s.y < rc.y + rc.height && s.x1 <= rc.x + 3 && rc.x - s.x1 < 260).sort((a,b) => b.x1 - a.x1)[0];
+        const above = segs.filter(s => s.y >= rc.y + rc.height - 3 && s.y < rc.y + rc.height + 26 && s.x0 < rc.x + rc.width && s.x1 > rc.x - 4).sort((a,b) => a.y - b.y)[0];
+        near = cleanLabel((left || above || {text:""}).text);
+      }catch(e){}
+      slots.push({label: near || pretty, alt: pretty, where: "box \u201c" + name + "\u201d", set(value){
+        try{ f.setText(value); }catch(e){ try{ f.setMaxLength(undefined); f.setText(value); }catch(e2){} } }});
+    }
+  } else {
+    if(!text || !text.some(p => p.segs.length)) throw new Error("This PDF has no fillable boxes and no readable text. It is probably a scan, which cannot be filled here.");
+    // --- flat PDF: find the answer space for each label and remember it with the slot. ---
+    font = await pdf.embedFont(StandardFonts.Helvetica);
+    text.forEach((pg, pi) => {
+     const skip = new Set(), pageText = pg.segs.map(s => s.text).join(" ").slice(0, 4000);
+     // --- list tables drawn as a grid: a line of column titles, then ruled rows below ---
+     const textLines = [];
+     for(const s of pg.segs){ const ln = textLines.find(l => Math.abs(l.y - s.y) < 0.4*s.size); if(ln) ln.segs.push(s); else textLines.push({y:s.y, segs:[s]}); }
+     for(const ln of textLines){
+      if(ln.segs.length < 2) continue;
+      const hdr = findHeader(ln.segs.map((s, i) => ({text:s.text, id:i})), pageText); if(!hdr) continue;
+      const list = hdr.list, cols = [];
+      for(const [i,k] of hdr.map){                       // each title's column = the vertical lines left and right of it
+        const s = ln.segs[i], mid = s.y + 0.35*s.size, vs = pg.v.filter(l => l.y0 - 1 <= mid && l.y1 + 1 >= mid);
+        const L = Math.max(-Infinity, ...vs.filter(l => l.x <= s.x0 + 1).map(l => l.x)), R = Math.min(Infinity, ...vs.filter(l => l.x >= s.x1 - 1).map(l => l.x));
+        if(isFinite(L) && isFinite(R)) cols.push({k, L, R, s});
+      }
+      if(cols.filter(c => c.k !== "no").length < list.min) continue;
+      const c0 = cols[0], size = Math.min(9, Math.max(7, c0.s.size));
+      const spans = l => l.x0 <= c0.L + 2 && l.x1 >= c0.L + 10;
+      const hb = Math.max(-Infinity, ...pg.h.filter(l => spans(l) && l.y <= c0.s.y - 1).map(l => l.y)); if(!isFinite(hb)) continue;
+      const ys = Array.from(new Set(pg.h.filter(l => spans(l) && l.y < hb - 4).map(l => Math.round(l.y)))).sort((a,b) => b - a).filter((y, i, arr) => i === 0 || arr[i-1] - y > 4);
+      const xa = Math.min(...cols.map(c => c.L)), xb = Math.max(...cols.map(c => c.R)), keyCol = cols.find(c => c.k === list.keyCol);
+      const inCell = (c, row) => pg.segs.filter(t => t.x1 > c.L + 1 && t.x0 < c.R - 1 && t.y > row.bottom - 1 && t.y < row.top - 1);
+      const rows = []; let top = hb;
+      for(const y of ys){
+        const row = {top, bottom:y}, keyText = keyCol ? inCell(keyCol, row).map(t => t.text).join(" ") : "";
+        if(keyText && list.keyCol){ row.keyText = keyText; pg.segs.filter(t => t.x1 > xa && t.x0 < xb && t.y > y - 1 && t.y < top - 1).forEach(t => skip.add(t)); }
+        else if(cols.some(c => inCell(c, row).some(t => c.k !== "no" || hasLetters(t.text)))) break;
+        else row.empty = true;
+        rows.push(row); top = y;
+      }
+      if(!rows.length) continue;
+      ln.segs.forEach(s => skip.add(s));
+      slots.push({table:true, list:list.key, label:list.title + " table", where:"page " + (pi+1), room: rows.filter(x => x.empty).length, cols:cols.map(c => colLabel(list, c.k)),
+        set(entries){
+          for(const a of planRows(list, entries, rows, false)){
+            const row = rows[a.ri], hgt = row.top - row.bottom;
+            for(const c of cols){
+              if(a.keyed && c.k === list.keyCol) continue;
+              const v = entryValue(list, entries[a.ei], c.k, a.n); if(!v || inCell(c, row).length) continue;
+              draws.push({pi, base:size, v, sp:{kind:"cell", x:c.L + 3, y:row.bottom + Math.max(2, (hgt - 0.72*size)/2), w:c.R - c.L - 6,
+                maxLines:Math.max(1, Math.floor((hgt - 2)/(1.15*size))), top:row.top}});
+            }
+          }
+        }});
+     }
+     pg.segs.forEach(s => {
+      if(skip.has(s) || !hasLetters(s.text)) return;
+      const base = Math.min(11, Math.max(7, s.size));
+      const make = (label, sp, weak) => slots.push({label, weak, where: "page " + (pi+1) + ", " + SPACE_WORDS[sp.kind],
+        set(v){ draws.push({pi, sp, base, v}); }, fit(v){ return fitText(font, v, sp, base).ok; }});
+      const blanks = Array.from(s.text.matchAll(BLANK));
+      if(blanks.length){                       // blanks typed as ____ : the blank itself is the space
+        let prev = 0; const per = (s.x1 - s.x0) / s.text.length;
+        for(const m of blanks){ const label = cleanLabel(s.text.slice(prev, m.index)); prev = m.index + m[0].length;
+          if(hasLetters(label)) make(label, {kind:"line", x: s.x0 + m.index*per + 2, y: s.y + 1.5, w: m[0].length*per - 4, maxLines: 1}, false); }
+        return;
+      }
+      if(s.text.length > 80) return;
+      const sp = findSpace(pg, s);
+      make(cleanLabel(s.text), sp, !/:\s*$/.test(s.text) && (sp.kind === "right" || sp.kind === "guess"));
+     });
+    });
+  }
+  return {slots, ext:"pdf", flat: !boxes.length, async save(){
+    for(const d of draws){
+      const f = fitText(font, d.v, d.sp, d.base);
+      const y0 = f.lines.length > 1 && d.sp.top ? d.sp.top - f.size - 1.5 : d.sp.y;     // wrapped text in a table cell starts at the top
+      f.lines.forEach((line, k) => pages[d.pi].drawText(line, {x: d.sp.x, y: y0 - k*1.15*f.size, size: f.size, font}));
+    }
+    return pdf.save();
+  }};
+}
+
+const OPENERS = {xlsx: openXlsx, xlsm: openXlsx, docx: openDocx, pdf: openPdf};
+
+/* =====================================================================
+   PART 8. SCREEN 1: THE SHIP TABLE
+   ===================================================================== */
+const openGroups = new Set(["Identity"]);        // which sections are unfolded
+/* One foldable section: title, a "3 of 11 filled" pill, and the body. */
+function sectionCard(name, countText, body){
+  const pill = el("span", {class:"pill"}, countText);
+  const d = el("details", {class:"card"}, el("summary", null, el("h2", null, name), pill), body);
+  d.open = openGroups.has(name);
+  d.addEventListener("toggle", () => { if(d.open) openGroups.add(name); else openGroups.delete(name); });
+  return {card:d, pill};
+}
+function renderShip(){
+  const box = $("shipGroups"); box.textContent = "";
+  const groups = new Map();
+  for(const f of allFields()){ if(f.cert) continue; if(!groups.has(f.group)) groups.set(f.group, []); groups.get(f.group).push(f); }
+  for(const name of new Set([...ORDER, ...groups.keys()])){
+    if(name[0] === "@"){ box.append(listCard(listByKey(name.slice(1)))); continue; }
+    const list = groups.get(name); if(!list) continue;
+    const count = () => list.filter(f => (state.values[f.key]||"").trim()).length + " of " + list.length + " filled";
+    const body = el("div", {class:"stack"}), sec = sectionCard(name, count(), body);
+    body.append(el("div", {class:"fields"}, list.map(f => el("div", {class:"field"},
+      el("label", {for:"f_"+f.key}, f.label),
+      el("div", {class:"rowx"},
+        el("input", {type:"text", id:"f_"+f.key, value: state.values[f.key] || "", autocomplete:"off", oninput: e => {
+          const v = e.target.value; if(v) state.values[f.key] = v; else delete state.values[f.key];
+          state.example = false; $("exampleNote").hidden = true; sec.pill.textContent = count(); scheduleSave(); }}),
+        f.custom ? el("button", {class:"small", "aria-label":"Remove field " + f.label, onclick: () => {
+          state.custom = state.custom.filter(c => c.key !== f.key); delete state.values[f.key];
+          for(const a in state.aliases) if(state.aliases[a] === f.key) delete state.aliases[a];
+          scheduleSave(); renderShip(); }}, "Remove") : null)))));
+    if(name === "Nil list declarations") body.append(el("div", {class:"bar"}, el("button", {id:"nilBtn", onclick: () => {
+      for(const f of list) if(!(state.values[f.key]||"").trim()) state.values[f.key] = "NIL"; scheduleSave(); renderShip(); }}, "Fill empty rows with NIL")));
+    box.append(sec.card);
+  }
+  $("exampleNote").hidden = !state.example;
+}
+
+/* A list section: a table you can type into, one row per person / port / parcel. */
+function listCard(list){
+  const certs = list.key === "certs";
+  const cols = list.cols.filter(c => !c.calc && c.key !== "no");
+  if(!certs && !state.lists[list.key]) state.lists[list.key] = list.seed ? list.seed.map(a => ({[list.keyCol]: a})) : Array.from({length:list.start || 1}, () => ({}));
+  const rows = certs ? CERTS : state.lists[list.key];
+  const count = () => listRows(list.key).length + (certs ? " of " + CERTS.length + " filled" : " rows filled");
+  const tbody = el("tbody"), body = el("div", {class:"stack"}), sec = sectionCard(list.title, count(), body);
+  const draw = () => {
+    tbody.textContent = "";
+    rows.forEach((row, i) => tbody.append(el("tr", null, el("td", {class:"num"}, String(i+1)),
+      cols.map(c => {
+        if(certs && c.key === "name") return el("td", {class:"fixed"}, row.name);
+        const vkey = certs ? row.id + "_" + c.key : null;
+        return el("td", null, el("input", {type:"text", id:"l_"+list.key+"_"+i+"_"+c.key, "aria-label":c.label + ", row " + (i+1), autocomplete:"off",
+          value: certs ? (state.values[vkey] || "") : (row[c.key] || ""), oninput: e => {
+            const v = e.target.value;
+            if(certs){ if(v) state.values[vkey] = v; else delete state.values[vkey]; }
+            else { if(v) row[c.key] = v; else delete row[c.key]; }
+            state.example = false; sec.pill.textContent = count(); scheduleSave(); }}));
+      }),
+      certs ? null : el("td", null, el("button", {class:"small", "aria-label":"Remove row " + (i+1), onclick: () => { rows.splice(i, 1); scheduleSave(); draw(); sec.pill.textContent = count(); }}, "Remove")))));
+  };
+  draw();
+  body.append(el("p", {class:"muted"}, list.note),
+    el("div", {class:"scroll"}, el("table", {class:"grid"}, el("thead", null, el("tr", null, el("th", null, "#"), cols.map(c => el("th", null, c.label)), certs ? null : el("th", null, ""))), tbody)),
+    el("div", {class:"bar"},
+      certs ? null : el("button", {onclick: () => { if(list.max && rows.length >= list.max){ toast("This list holds " + list.max + " rows."); return; } rows.push({}); draw(); }}, "Add row"),
+      el("label", {class:"bar", style:"gap:6px"}, el("span", {class:"muted"}, certs ? "Read from an Excel file:" : "Replace from an Excel file:"),
+        el("input", {type:"file", id:"imp_"+list.key, accept:".xlsx,.xlsm", onchange: e => importList(list, e.target)}))));
+  return sec.card;
+}
+
+function addCustomField(label){
+  label = label.trim(); if(!label) return null;
+  let key = "c_" + (norm(label).replace(/ /g,"_").slice(0,40) || "field"), n = 2;
+  const taken = new Set(allFields().map(f => f.key));
+  while(taken.has(key)) key = key.replace(/(_\d+)?$/, "_" + n++);
+  state.custom.push({key, label});
+  return key;
+}
+
+/* Hand a file to the user. In the Claude app this asks for confirmation first. */
+async function saveFile(filename, data){
+  const dl = await cap("downloads");
+  if(dl){
+    try{ await dl.save({filename, data}); toast("Saved " + filename); }
+    catch(e){ toast(e && e.code === "declined" ? "Download cancelled." : "The file could not be saved here (" + ((e && e.code) || "error") + ")."); }
+    return;
+  }
+  try{ // plain-browser fallback, used when the page runs outside Claude
+    const a = el("a", {href: URL.createObjectURL(data instanceof Blob ? data : new Blob([data])), download: filename});
+    document.body.append(a); a.click(); a.remove();
+  }catch(e){ toast("Downloads are not available in this view."); }
+}
+
+/* =====================================================================
+   PART 9. SCREEN 2: UPLOAD, REVIEW, DOWNLOAD
+   job = the form being worked on: its bytes and the list of blanks found.
+   ===================================================================== */
+let job = null;
+
+async function analyse(file){
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  $("reviewCard").hidden = false; $("howCard").hidden = true;
+  $("reviewTitle").textContent = file.name; $("reviewStat").textContent = "Reading";
+  $("slotList").textContent = ""; $("otherBox").hidden = true; $("downloadBtn").disabled = true; $("aiBtn").hidden = true;
+  if(ext === "doc" || ext === "xls"){ $("reviewMsg").textContent = "Old ." + ext + " files cannot be read. Open the file in " + (ext==="doc"?"Word":"Excel") + ", choose Save As ." + ext + "x, and upload that copy."; $("reviewStat").textContent = "Not readable"; return; }
+  if(!OPENERS[ext]){ $("reviewMsg").textContent = "This file type is not supported. Upload an .xlsx, .docx or .pdf file."; $("reviewStat").textContent = "Not readable"; return; }
+  try{
+    const bytes = await file.arrayBuffer();
+    const opened = await OPENERS[ext](bytes.slice(0));
+    // Turn each blank found into a row for the review list, pre-matched where possible.
+    const slots = opened.slots.map((raw, idx) => {
+      if(raw.table) return {idx, table:true, list:raw.list, label:raw.label, where:raw.where, cols:raw.cols, room:raw.room, value:"", include: listRows(raw.list).length > 0};
+      const key = matchField(raw.label) || (raw.alt ? matchField(raw.alt) : null);
+      const value = key ? (state.values[key] || "") : "";
+      return {idx, label: raw.label, where: raw.where, weak: raw.weak, fit: raw.fit, fieldKey: key, value, include: !!value};
+    }).filter(s => s.table || s.fieldKey || !s.weak);
+    job = {name: file.name, ext, bytes, slots, flat: !!opened.flat};
+    renderReview();
+    cap("sample").then(s => { $("aiBtn").hidden = !s || !job || !job.slots.some(x => !x.fieldKey && !x.table); });
+  }catch(e){
+    console.error(e); job = null;
+    $("reviewMsg").textContent = (e && e.message) || "The file could not be read."; $("reviewStat").textContent = "Not readable";
+  }
+}
+
+function fieldSelect(slot){
+  const sel = el("select", {id:"sel_"+slot.idx, "aria-label":"Field for " + slot.label}, el("option", {value:""}, "No field"));
+  const groups = new Map();
+  for(const f of allFields()){ if(!groups.has(f.group)) groups.set(f.group, el("optgroup", {label:f.group})); groups.get(f.group).append(el("option", {value:f.key}, f.label)); }
+  sel.append(...groups.values(), el("option", {value:"+new"}, "+ New field named \u201c" + slot.label.slice(0,40) + "\u201d"));
+  sel.value = slot.fieldKey || "";
+  sel.addEventListener("change", () => {
+    let key = sel.value;
+    if(key === "+new") key = addCustomField(slot.label);
+    slot.fieldKey = key || null;
+    slot.value = key ? (state.values[key] || "") : "";
+    slot.include = !!slot.value;
+    state.aliases[norm(slot.label)] = key || "";          // remember this choice for the next form
+    scheduleSave(); renderReview();
+  });
+  return sel;
+}
+
+/* A review row for a whole table (crew list, ports ...): tick it to fill every row. */
+function tableRow(slot){
+  const n = listRows(slot.list).length, list = listByKey(slot.list);
+  const check = el("input", {type:"checkbox", id:"inc_"+slot.idx, "aria-label":"Fill " + slot.label});
+  check.checked = slot.include && n > 0; check.disabled = !n;
+  check.addEventListener("change", () => { slot.include = check.checked; updateStat(); });
+  return el("div", {class:"slot" + (n ? "" : " empty")}, check, el("div", {class:"lab"}, el("b", null, slot.label), el("small", null, slot.where)),
+    el("div", {class:"tablenote"}, n ? n + " rows from your " + list.title.toLowerCase() + ". Columns found: " + slot.cols.join(", ") + "."
+      : "Your " + list.title.toLowerCase() + " is empty. Add rows in step 1, then come back."),
+    // the form's table has a fixed number of blank rows and you have more
+    n && slot.room && n > slot.room ? el("div", {class:"tablenote", style:"color:var(--warn)"}, "Only " + slot.room + " of your " + n + " rows fit: the form has no more blank rows before its next text. Add rows to the form and upload it again.") : null);
+}
+
+function slotRow(slot){
+  if(slot.table) return tableRow(slot);
+  const check = el("input", {type:"checkbox", id:"inc_"+slot.idx, "aria-label":"Fill " + slot.label});
+  check.checked = slot.include;
+  check.addEventListener("change", () => { slot.include = check.checked; updateStat(); });
+  const val = el("input", {type:"text", id:"val_"+slot.idx, value: slot.value, placeholder: slot.fieldKey ? "No value in ship table yet" : "Type a value to fill", autocomplete:"off", "aria-label":"Value for " + slot.label});
+  // For flat PDFs: warn when the value is too long for the space measured on the form.
+  const tight = el("small", {class:"tight", hidden:true}, "Too long for this space, it will run over. Shorten it.");
+  const showTight = () => { tight.hidden = !(slot.fit && slot.value.trim() && !slot.fit(slot.value)); };
+  const row = el("div", {class:"slot" + (slot.fieldKey && !slot.value ? " empty" : "")}, check, el("div", {class:"lab"}, el("b", null, slot.label), el("small", null, slot.where), tight), fieldSelect(slot), val);
+  showTight();
+  val.addEventListener("input", () => { slot.value = val.value; slot.include = check.checked = !!val.value; row.classList.toggle("empty", !!slot.fieldKey && !val.value); showTight(); updateStat(); });
+  // A value typed here for a field that is still empty in the ship table is stored there too.
+  val.addEventListener("change", () => {
+    if(slot.fieldKey && val.value.trim() && !(state.values[slot.fieldKey]||"").trim()){
+      state.values[slot.fieldKey] = val.value.trim(); scheduleSave();
+      const f = allFields().find(x => x.key === slot.fieldKey); toast("Also saved to ship table: " + (f ? f.label : slot.fieldKey));
+    }
+  });
+  return row;
+}
+
+function updateStat(){
+  if(!job) return;
+  const tables = job.slots.filter(s => s.table && s.include && listRows(s.list).length).length;
+  const n = job.slots.filter(s => !s.table && s.include && s.value.trim()).length + tables;
+  $("reviewStat").textContent = (n - tables) + " blanks" + (tables ? " and " + tables + (tables === 1 ? " table" : " tables") : "") + " will be filled";
+  $("reviewStat").className = "pill " + (n ? "ok" : "warn");
+  $("downloadBtn").disabled = !n;
+}
+
+function renderReview(){
+  const matched = job.slots.filter(s => s.table || s.fieldKey), other = job.slots.filter(s => !s.table && !s.fieldKey);
+  const missing = matched.filter(s => !s.table && !s.value.trim()).length;
+  $("reviewTitle").textContent = job.name;
+  $("reviewMsg").textContent = !job.slots.length ? "No blanks with a label were found in this file."
+    : matched.length + " of " + job.slots.length + " labels were matched to your ship table" + (missing ? ". Matched labels with no value yet: " + missing + ". Type the value here or in step 1." : ".")
+      + (job.flat ? " This PDF has no fillable boxes, so each value is fitted into the line, box or cell found for its label. Check the downloaded file once." : "");
+  $("slotList").replaceChildren(...matched.map(slotRow));
+  $("otherBox").hidden = !other.length;
+  $("otherSum").textContent = "Other labels found on the form (" + other.length + ")";
+  $("otherList").replaceChildren(...other.map(slotRow));
+  if(!matched.length && other.length) $("otherBox").open = true;
+  updateStat();
+}
+
+/* Download: open the original file again, write the chosen values, save a copy. */
+async function downloadFilled(){
+  if(!job) return;
+  const btn = $("downloadBtn"); btn.disabled = true; btn.textContent = "Preparing";
+  try{
+    const opened = await OPENERS[job.ext](job.bytes.slice(0));
+    for(const s of job.slots){
+      const target = opened.slots[s.idx]; if(!s.include || !target) continue;
+      if(s.table){ const rows = listRows(s.list); if(rows.length) target.set(rows); }
+      else if(s.value.trim()) target.set(s.value.trim());
+    }
+    const out = await opened.save();
+    const base = job.name.replace(/\.[^.]+$/, "");
+    await saveFile(base + "_filled." + (job.ext === "xlsm" ? "xlsx" : job.ext), new Blob([out]));
+  }catch(e){ console.error(e); toast("The filled file could not be created: " + ((e && e.message) || "error")); }
+  btn.textContent = "Download filled form"; updateStat();
+}
+
+/* Optional: ask Claude to match labels the built-in word list did not recognise.
+   Only the label texts and field names are sent, never your ship's values. */
+async function matchWithClaude(){
+  const sample = await cap("sample"); if(!sample || !job) return;
+  const todo = job.slots.filter(s => !s.fieldKey && !s.table).slice(0, 120); if(!todo.length) return;
+  const btn = $("aiBtn"); btn.disabled = true; btn.textContent = "Matching";
+  try{
+    const prompt = "You map labels found on a ship's port clearance form to fields of a ship particulars table.\n\nFields (key = meaning):\n"
+      + allFields().map(f => f.key + " = " + f.label).join("\n")
+      + "\n\nLabels found on the form (id = text):\n" + todo.map((s,i) => i + " = " + s.label).join("\n")
+      + "\n\nReply with only a JSON object that maps every label id to the single best field key, or to null when no field fits. "
+      + "Headings, instructions, signature or stamp lines and crew-list column titles get null.";
+    const res = await sample(prompt, {modelTier:"quick"});
+    const m = /\{[\s\S]*\}/.exec(res.text || ""); const map = m ? JSON.parse(m[0]) : {};
+    const known = new Set(allFields().map(f => f.key)); let hits = 0;
+    todo.forEach((s, i) => { const key = map[i]; if(key && known.has(key)){ s.fieldKey = key; s.value = state.values[key] || ""; s.include = !!s.value; state.aliases[norm(s.label)] = key; hits++; } });
+    if(hits) scheduleSave();
+    renderReview(); toast(hits ? hits + " more matched. Check them before downloading." : "No further matches found.");
+  }catch(e){ toast(e && e.code === "rate_limited" ? "Claude is busy. Try again in a minute." : "Matching with Claude did not work this time."); }
+  btn.disabled = false; btn.textContent = "Match the rest with Claude";
+  btn.hidden = !job.slots.some(x => !x.fieldKey && !x.table);
+}
+
+/* =====================================================================
+   PART 10. WIRING: tabs, buttons, file inputs
+   ===================================================================== */
+function showTab(){
+  const tab = location.hash === "#fill" ? "fill" : "ship";
+  for(const t of ["ship","fill"]){ $("view-"+t).hidden = t !== tab; $("tab-"+t).setAttribute("aria-selected", String(t === tab)); }
+  if(tab === "ship") renderShip();
+  else if(job){ for(const s of job.slots) if(s.table){ if(listRows(s.list).length && !s.touched){ s.include = true; } } else if(s.fieldKey && !s.value){ s.value = state.values[s.fieldKey] || ""; s.include = !!s.value; } renderReview(); }
+}
+window.addEventListener("hashchange", showTab);
+
+$("addFieldBtn").addEventListener("click", () => { const i = $("newFieldLabel"); if(addCustomField(i.value)){ i.value = ""; scheduleSave(); renderShip(); toast("Field added under Your own fields."); } });
+$("newFieldLabel").addEventListener("keydown", e => { if(e.key === "Enter") $("addFieldBtn").click(); });
+$("exportBtn").addEventListener("click", () => saveFile("ship-particulars-backup.json", JSON.stringify(state, null, 2)));
+$("importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; if(!f) return;
+  try{ state = tidy(JSON.parse(await f.text())); scheduleSave(); renderShip(); toast("Backup restored."); }
+  catch(err){ toast("That file is not a backup from this page."); }
+  e.target.value = "";
+});
+$("exampleBtn").addEventListener("click", () => { state.values = {...EXAMPLE}; state.lists = JSON.parse(JSON.stringify(EXAMPLE_LISTS)); state.example = true; scheduleSave(); renderShip(); toast("Example ship loaded."); });
+let clearArmed = false;
+$("clearBtn").addEventListener("click", e => {
+  if(!clearArmed){ clearArmed = true; e.target.textContent = "Tap again to clear everything"; setTimeout(() => { clearArmed = false; e.target.textContent = "Clear all values and lists"; }, 4000); return; }
+  clearArmed = false; e.target.textContent = "Clear all values and lists"; state.values = {}; state.lists = {}; state.example = false; scheduleSave(); renderShip();
+});
+
+$("formFile").addEventListener("change", e => { const f = e.target.files[0]; if(f) analyse(f); });
+const drop = $("drop");
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; if(f) analyse(f); });
+$("downloadBtn").addEventListener("click", downloadFilled);
+$("aiBtn").addEventListener("click", matchWithClaude);
+
+showTab();
+initStore();
+/* Offline support: sw.js stores the app's files on the device the first time it is opened. */
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(e => console.warn("Offline mode not available", e));
+</script>
+</body>
+</html>
