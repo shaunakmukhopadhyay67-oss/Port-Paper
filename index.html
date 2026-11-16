@@ -240,6 +240,9 @@ const CATALOGUE = [
   ["Voyage (update at each port)","draft_fwd","Arrival draft forward",["draft fwd","draft forward","forward draft","fwd draft","fwd"]],
   ["Voyage (update at each port)","draft_aft","Arrival draft aft",["draft aft","aft draft","aft"]],
   ["Voyage (update at each port)","purpose_of_call","Purpose of call",["purpose","reason for call"]],
+  ["Voyage (update at each port)","port_locode","UN/LOCODE of this port",["unlocode","un locode","locode","port code","un locode of port of arrival","locode of port of call"]],
+  ["Voyage (update at each port)","last_port_locode","UN/LOCODE of last port",["last port locode","last port unlocode","last port code","locode of last port"]],
+  ["Voyage (update at each port)","next_port_locode","UN/LOCODE of next port",["next port locode","next port unlocode","next port code","locode of next port"]],
   ["Voyage (update at each port)","last_port_departure","Departure date from last port",["date of departure from last port","last port departure","sailed from last port"]],
   ["Voyage (update at each port)","next_port_eta","ETA at next port",["eta next port","next port eta"]],
   ["Voyage (update at each port)","pilot_eta","ETA pilot station",["eta pilot boarding ground","eta pbg","eta pilot"]],
@@ -442,7 +445,9 @@ const PERSON_COLS = [
 const LISTS = [
   {key:"ports", title:"Last 10 ports of call", min:3, start:10, max:10, hint:/port/i,
    note:"Row 1 is the most recent port. Used by ISPS and pre-arrival security forms and the health declaration.",
-   cols:[col("no","No."), col("port","Port",["port name","name of port","port of call","ports"]), col("country","Country"),
+   cols:[col("no","No."), col("port","Port",["port name","name of port","port of call","ports"]),
+     col("unlocode","UN/LOCODE",["unlocode","un locode","locode","port code","un code","unloc","un lo code","port locode"]),
+     col("country","Country"),
      col("facility","Port facility",["port facility name","facility","terminal","berth"]),
      col("arrival","Date of arrival",["arrival","arrival date","arrived","date from","from"],{date:true}),
      col("departure","Date of departure",["departure","departure date","sailed","date to","departed"],{date:true}),
@@ -522,7 +527,7 @@ const EXAMPLE = {vessel_name:"MT EXAMPLE SPIRIT",imo_number:"9999999",call_sign:
   cargo:"Gas oil",agent:"Sample Agency",issc_number:"ISSC-0000",issc_issued_by:"Example Class",issc_issue_date:"01 Jan 2028",issc_expiry:"31 Dec 2032",
   iopp_number:"IOPP-0000",iopp_issued_by:"Example Class",iopp_expiry:"31 Dec 2030",security_level:"1",moor_ropes_no:"16",moor_rope_mbl:"64 t"};
 const EXAMPLE_LISTS = {
-  ports:[{port:"Port A",country:"Country A",arrival:"20 Dec 2029",departure:"22 Dec 2029",level:"1",measures:"Nil"},
+  ports:[{port:"Port A",unlocode:"XXAAA",country:"Country A",arrival:"20 Dec 2029",departure:"22 Dec 2029",level:"1",measures:"Nil"},
          {port:"Port C",country:"Country C",arrival:"05 Dec 2029",departure:"07 Dec 2029",level:"1",measures:"Nil"},
          {port:"Port D",country:"Country D",arrival:"18 Nov 2029",departure:"20 Nov 2029",level:"1",measures:"Nil"}],
   crew:[{family:"SAMPLE",given:"Alex",rank:"Master",nationality:"Exampleland",dob:"01 Jan 1980",passport:"X0000001",passport_expiry:"01 Jan 2033"},
